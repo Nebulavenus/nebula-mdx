@@ -1,0 +1,8 @@
+[package]
+name = "nebula-mdx"
+version = "0.1.0"
+authors = ["Nebula Venus <6595784+Nebulavenus@users.noreply.github.com>"]
+edition = "2018"
+
+[dependencies]
+scroll = "0.10"
