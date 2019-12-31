@@ -1,7 +1,5 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+pub use mdlx::MDLXModel;
+
+pub mod consts;
+pub mod chunks;
+mod mdlx;
