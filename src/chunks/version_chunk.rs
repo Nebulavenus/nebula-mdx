@@ -1,5 +1,5 @@
-use scroll::{ctx, Endian, Pread, Pwrite};
 use crate::chunks::BytesTotalSize;
+use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
 
 #[derive(PartialEq, Debug)]
@@ -18,7 +18,13 @@ impl ctx::TryFromCtx<'_, Endian> for VersionChunk {
         let offset = &mut 0;
         let chunk_size = src.gread_with::<u32>(offset, ctx)?;
         let version = src.gread_with::<u32>(offset, ctx)?;
-        Ok((VersionChunk { chunk_size, version }, *offset))
+        Ok((
+            VersionChunk {
+                chunk_size,
+                version,
+            },
+            *offset,
+        ))
     }
 }
 

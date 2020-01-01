@@ -1,5 +1,5 @@
-use scroll::{ctx, Endian, Pread, Pwrite};
 use crate::chunks::BytesTotalSize;
+use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
 
 #[derive(PartialEq, Debug)]
@@ -27,10 +27,7 @@ impl ctx::TryFromCtx<'_, Endian> for SequenceChunk {
             }
         }
 
-        Ok((SequenceChunk {
-            chunk_size,
-            data,
-        }, *offset))
+        Ok((SequenceChunk { chunk_size, data }, *offset))
     }
 }
 
@@ -107,18 +104,21 @@ impl ctx::TryFromCtx<'_, Endian> for Sequence {
             src.gread_with::<f32>(offset, ctx)?,
         ];
 
-        Ok((Sequence {
-            name,
-            interval_start,
-            interval_end,
-            move_speed,
-            non_looping,
-            rarity,
-            unknown,
-            bounds_radius,
-            minimum_extent,
-            maximum_extent,
-        }, *offset))
+        Ok((
+            Sequence {
+                name,
+                interval_start,
+                interval_end,
+                move_speed,
+                non_looping,
+                rarity,
+                unknown,
+                bounds_radius,
+                minimum_extent,
+                maximum_extent,
+            },
+            *offset,
+        ))
     }
 }
 
@@ -134,7 +134,8 @@ impl ctx::TryIntoCtx<Endian> for Sequence {
         for _ in 0..max_name_len {
             src.gwrite_with::<u8>(0x0, null_offset, ctx)?;
         }
-        src.gwrite_with::<&str>(self.name.as_ref(), &mut offset.clone(), ())?.to_string();
+        src.gwrite_with::<&str>(self.name.as_ref(), &mut offset.clone(), ())?
+            .to_string();
         *offset += max_name_len;
 
         src.gwrite_with::<u32>(self.interval_start, offset, ctx)?;

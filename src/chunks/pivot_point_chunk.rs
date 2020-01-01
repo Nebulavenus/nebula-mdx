@@ -1,5 +1,5 @@
-use scroll::{ctx, Endian, Pread, Pwrite};
 use crate::chunks::BytesTotalSize;
+use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
 
 #[derive(PartialEq, Debug)]
@@ -27,10 +27,7 @@ impl ctx::TryFromCtx<'_, Endian> for PivotPointChunk {
             }
         }
 
-        Ok((PivotPointChunk {
-            chunk_size,
-            data,
-        }, *offset))
+        Ok((PivotPointChunk { chunk_size, data }, *offset))
     }
 }
 
@@ -81,9 +78,7 @@ impl ctx::TryFromCtx<'_, Endian> for PivotPoint {
             src.gread_with::<f32>(offset, ctx)?,
         ];
 
-        Ok((PivotPoint {
-            position,
-        }, *offset))
+        Ok((PivotPoint { position }, *offset))
     }
 }
 

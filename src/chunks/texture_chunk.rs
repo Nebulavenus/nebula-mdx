@@ -1,5 +1,5 @@
-use scroll::{ctx, Endian, Pread, Pwrite};
 use crate::chunks::BytesTotalSize;
+use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
 
 #[derive(PartialEq, Debug)]
@@ -27,10 +27,7 @@ impl ctx::TryFromCtx<'_, Endian> for TextureChunk {
             }
         }
 
-        Ok((TextureChunk {
-            chunk_size,
-            data,
-        }, *offset))
+        Ok((TextureChunk { chunk_size, data }, *offset))
     }
 }
 
@@ -87,12 +84,15 @@ impl ctx::TryFromCtx<'_, Endian> for Texture {
         let unknown = src.gread_with::<u32>(offset, ctx)?;
         let flags = src.gread_with::<u32>(offset, ctx)?;
 
-        Ok((Texture {
-            replaceable_id,
-            file_name,
-            unknown,
-            flags,
-        }, *offset))
+        Ok((
+            Texture {
+                replaceable_id,
+                file_name,
+                unknown,
+                flags,
+            },
+            *offset,
+        ))
     }
 }
 
@@ -110,7 +110,8 @@ impl ctx::TryIntoCtx<Endian> for Texture {
         for _ in 0..max_name_len {
             src.gwrite_with::<u8>(0x0, null_offset, ctx)?;
         }
-        src.gwrite_with::<&str>(self.file_name.as_ref(), &mut offset.clone(), ())?.to_string();
+        src.gwrite_with::<&str>(self.file_name.as_ref(), &mut offset.clone(), ())?
+            .to_string();
         *offset += max_name_len;
 
         src.gwrite_with::<u32>(self.unknown, offset, ctx)?;

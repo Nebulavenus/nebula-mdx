@@ -1,7 +1,7 @@
-use scroll::{ctx, Endian, Pread, Pwrite};
 use crate::chunks::{BytesTotalSize, GeosetAlpha, GeosetColor};
+use crate::consts::{KGAC_TAG, KGAO_TAG};
+use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
-use crate::consts::{KGAO_TAG, KGAC_TAG};
 
 #[derive(PartialEq, Debug)]
 pub struct GeosetAnimationChunk {
@@ -27,10 +27,7 @@ impl ctx::TryFromCtx<'_, Endian> for GeosetAnimationChunk {
             data.push(geoset_animation);
         }
 
-        Ok((GeosetAnimationChunk {
-            chunk_size,
-            data,
-        }, *offset))
+        Ok((GeosetAnimationChunk { chunk_size, data }, *offset))
     }
 }
 
@@ -100,7 +97,7 @@ impl ctx::TryFromCtx<'_, Endian> for GeosetAnimation {
             color,
             geoset_id,
             geoset_alpha: None,
-            geoset_color: None
+            geoset_color: None,
         };
 
         while (*offset as u32) < inclusive_size {
@@ -112,11 +109,11 @@ impl ctx::TryFromCtx<'_, Endian> for GeosetAnimation {
                 KGAO_TAG => {
                     let geoset_alpha = src.gread_with::<GeosetAlpha>(offset, ctx)?;
                     geoset_animation.geoset_alpha = Some(geoset_alpha);
-                },
+                }
                 KGAC_TAG => {
                     let geoset_color = src.gread_with::<GeosetColor>(offset, ctx)?;
                     geoset_animation.geoset_color = Some(geoset_color);
-                },
+                }
                 _ => unreachable!(),
             }
         }

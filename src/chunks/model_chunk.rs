@@ -1,5 +1,5 @@
-use scroll::{ctx, Endian, Pread, Pwrite};
 use crate::chunks::BytesTotalSize;
+use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
 
 #[derive(PartialEq, Debug)]
@@ -41,15 +41,18 @@ impl ctx::TryFromCtx<'_, Endian> for ModelChunk {
             src.gread_with::<f32>(offset, ctx)?,
         ];
         let blend_time = src.gread_with::<u32>(offset, ctx)?;
-        Ok((ModelChunk {
-            chunk_size,
-            name,
-            unknown,
-            bounds_radius,
-            minimum_extent,
-            maximum_extent,
-            blend_time,
-        }, *offset))
+        Ok((
+            ModelChunk {
+                chunk_size,
+                name,
+                unknown,
+                bounds_radius,
+                minimum_extent,
+                maximum_extent,
+                blend_time,
+            },
+            *offset,
+        ))
     }
 }
 
@@ -68,7 +71,8 @@ impl ctx::TryIntoCtx<Endian> for ModelChunk {
             src.gwrite_with::<u8>(0x0, null_offset, ctx)?;
         }
         // FIX THIS IN SCROLL LIB
-        src.gwrite_with::<&str>(self.name.as_ref(), &mut offset.clone(), ())?.to_string();
+        src.gwrite_with::<&str>(self.name.as_ref(), &mut offset.clone(), ())?
+            .to_string();
         *offset += max_name_len;
 
         src.gwrite_with::<u32>(self.unknown, offset, ctx)?;

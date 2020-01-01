@@ -1,5 +1,5 @@
-use scroll::{ctx, Endian, Pread, Pwrite};
 use crate::chunks::{BytesTotalSize, Node};
+use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
 
 #[derive(PartialEq, Debug)]
@@ -26,10 +26,7 @@ impl ctx::TryFromCtx<'_, Endian> for BoneChunk {
             data.push(bone);
         }
 
-        Ok((BoneChunk {
-            chunk_size,
-            data,
-        }, *offset))
+        Ok((BoneChunk { chunk_size, data }, *offset))
     }
 }
 
@@ -79,11 +76,14 @@ impl ctx::TryFromCtx<'_, Endian> for Bone {
         let geoset_id = src.gread_with::<u32>(offset, ctx)?;
         let geoset_animation_id = src.gread_with::<u32>(offset, ctx)?;
 
-        Ok((Bone {
-            node,
-            geoset_id,
-            geoset_animation_id,
-        }, *offset))
+        Ok((
+            Bone {
+                node,
+                geoset_id,
+                geoset_animation_id,
+            },
+            *offset,
+        ))
     }
 }
 

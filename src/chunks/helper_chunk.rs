@@ -1,5 +1,5 @@
-use scroll::{ctx, Endian, Pread, Pwrite};
 use crate::chunks::{BytesTotalSize, Node};
+use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
 
 #[derive(PartialEq, Debug)]
@@ -26,10 +26,7 @@ impl ctx::TryFromCtx<'_, Endian> for HelperChunk {
             data.push(helper);
         }
 
-        Ok((HelperChunk {
-            chunk_size,
-            data,
-        }, *offset))
+        Ok((HelperChunk { chunk_size, data }, *offset))
     }
 }
 
@@ -75,9 +72,7 @@ impl ctx::TryFromCtx<'_, Endian> for Helper {
         let offset = &mut 0;
         let node = src.gread_with::<Node>(offset, ctx)?;
 
-        Ok((Helper {
-            node,
-        }, *offset))
+        Ok((Helper { node }, *offset))
     }
 }
 

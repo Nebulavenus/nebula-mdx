@@ -1,5 +1,5 @@
-use scroll::{ctx, Endian, Pread, Pwrite};
 use crate::chunks::BytesTotalSize;
+use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
 
 #[derive(PartialEq, Debug)]
@@ -27,10 +27,7 @@ impl ctx::TryFromCtx<'_, Endian> for GlobalSequenceChunk {
             }
         }
 
-        Ok((GlobalSequenceChunk {
-            chunk_size,
-            data,
-        }, *offset))
+        Ok((GlobalSequenceChunk { chunk_size, data }, *offset))
     }
 }
 
@@ -77,9 +74,7 @@ impl ctx::TryFromCtx<'_, Endian> for GlobalSequence {
 
         let duration = src.gread_with::<u32>(offset, ctx)?;
 
-        Ok((GlobalSequence {
-            duration,
-        }, *offset))
+        Ok((GlobalSequence { duration }, *offset))
     }
 }
 

@@ -1,5 +1,5 @@
-use scroll::{ctx, Endian, Pread, Pwrite};
 use crate::chunks::BytesTotalSize;
+use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
 
 #[derive(PartialEq, Debug)]
@@ -25,10 +25,7 @@ impl ctx::TryFromCtx<'_, Endian> for AttachmentChunk {
         }
         src.gread_inout_with(offset, &mut bytes, ctx)?;
 
-        Ok((AttachmentChunk {
-            chunk_size,
-            bytes,
-        }, *offset))
+        Ok((AttachmentChunk { chunk_size, bytes }, *offset))
     }
 }
 

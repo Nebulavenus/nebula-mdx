@@ -1,6 +1,6 @@
-use scroll::{ctx, Pread, Pwrite, Endian};
-use std::mem::size_of_val;
 use crate::chunks::BytesTotalSize;
+use scroll::{ctx, Endian, Pread, Pwrite};
+use std::mem::size_of_val;
 
 macro_rules! create_named_track {
     ($name:ident, $typ:ty, $size:expr) => {
@@ -24,12 +24,15 @@ macro_rules! create_named_track {
                     value[id] = src.gread_with::<$typ>(offset, ctx)?;
                 }
 
-                Ok(($name {
-                    time,
-                    value,
-                    in_tan: None,
-                    out_tan: None
-                }, *offset))
+                Ok((
+                    $name {
+                        time,
+                        value,
+                        in_tan: None,
+                        out_tan: None,
+                    },
+                    *offset,
+                ))
             }
         }
 
@@ -78,7 +81,7 @@ macro_rules! create_named_track {
 }
 
 macro_rules! create_named_tracks {
-   ($name:ident, $track:ty, $typ:ty, $size:expr) => {
+    ($name:ident, $track:ty, $typ:ty, $size:expr) => {
         #[derive(PartialEq, Debug, Clone)]
         pub struct $name {
             pub number_of_tracks: u32,
@@ -117,12 +120,15 @@ macro_rules! create_named_tracks {
                     data.push(track);
                 }
 
-                Ok(($name {
-                    number_of_tracks,
-                    interpolation_type,
-                    global_sequence_id,
-                    data,
-                }, *offset))
+                Ok((
+                    $name {
+                        number_of_tracks,
+                        interpolation_type,
+                        global_sequence_id,
+                        data,
+                    },
+                    *offset,
+                ))
             }
         }
 

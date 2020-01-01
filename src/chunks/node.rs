@@ -1,7 +1,7 @@
+use crate::chunks::{BytesTotalSize, GeosetRotation, GeosetScaling, GeosetTranslation};
+use crate::consts::{KGRT_TAG, KGSC_TAG, KGTR_TAG};
 use scroll::{ctx, Endian, Pread, Pwrite};
-use crate::chunks::{BytesTotalSize, GeosetTranslation, GeosetRotation, GeosetScaling};
 use std::mem::size_of_val;
-use crate::consts::{KGTR_TAG, KGRT_TAG, KGSC_TAG};
 
 #[derive(PartialEq, Debug)]
 pub struct Node {
@@ -47,7 +47,6 @@ impl ctx::TryFromCtx<'_, Endian> for Node {
         };
 
         while (*offset as u32) < inclusive_size {
-
             dbg!(&offset);
             let tag = src.gread_with::<u32>(offset, ctx).unwrap();
             dbg!(format!("{:X}", &tag));
@@ -57,15 +56,15 @@ impl ctx::TryFromCtx<'_, Endian> for Node {
                 KGTR_TAG => {
                     let geoset_translation = src.gread_with::<GeosetTranslation>(offset, ctx)?;
                     node.geoset_translation = Some(geoset_translation);
-                },
+                }
                 KGRT_TAG => {
                     let geoset_rotation = src.gread_with::<GeosetRotation>(offset, ctx)?;
                     node.geoset_rotation = Some(geoset_rotation);
-                },
+                }
                 KGSC_TAG => {
                     let geoset_scaling = src.gread_with::<GeosetScaling>(offset, ctx)?;
                     node.geoset_scaling = Some(geoset_scaling);
-                },
+                }
                 _ => unreachable!(),
             }
         }
@@ -88,7 +87,8 @@ impl ctx::TryIntoCtx<Endian> for Node {
         for _ in 0..max_name_len {
             src.gwrite_with::<u8>(0x0, null_offset, ctx)?;
         }
-        src.gwrite_with::<&str>(self.name.as_ref(), &mut offset.clone(), ())?.to_string();
+        src.gwrite_with::<&str>(self.name.as_ref(), &mut offset.clone(), ())?
+            .to_string();
         *offset += max_name_len;
 
         src.gwrite_with::<u32>(self.object_id, offset, ctx)?;

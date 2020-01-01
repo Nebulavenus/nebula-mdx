@@ -1,6 +1,6 @@
-use scroll::{Pread, LE, Pwrite};
 use crate::chunks::*;
 use crate::consts::*;
+use scroll::{Pread, Pwrite, LE};
 
 #[derive(PartialEq, Debug, Default)]
 pub struct MDLXModel {
@@ -39,8 +39,9 @@ impl MDLXModel {
 
                 // For debug
                 let mut tag_offset = offset.clone();
-                let tag_buffer
-                    = (0..4).map(|_| data.gread::<u8>(&mut tag_offset).unwrap()).collect::<Vec<u8>>();
+                let tag_buffer = (0..4)
+                    .map(|_| data.gread::<u8>(&mut tag_offset).unwrap())
+                    .collect::<Vec<u8>>();
                 let tag_name = String::from_utf8(tag_buffer).unwrap_or("NOTAG".to_string());
 
                 let tag = data.gread_with::<u32>(offset, LE)?;
@@ -87,7 +88,11 @@ impl MDLXModel {
         }
         if model.global_sequence_chunk.is_some() {
             data.gwrite_with::<u32>(GLBS_TAG, offset, LE)?;
-            data.gwrite_with::<GlobalSequenceChunk>(model.global_sequence_chunk.unwrap(), offset, LE)?;
+            data.gwrite_with::<GlobalSequenceChunk>(
+                model.global_sequence_chunk.unwrap(),
+                offset,
+                LE,
+            )?;
         }
         if model.texture_chunk.is_some() {
             data.gwrite_with::<u32>(TEXS_TAG, offset, LE)?;
@@ -95,7 +100,11 @@ impl MDLXModel {
         }
         if model.texture_animation_chunk.is_some() {
             data.gwrite_with::<u32>(TXAN_TAG, offset, LE)?;
-            data.gwrite_with::<TextureAnimationChunk>(model.texture_animation_chunk.unwrap(), offset, LE)?;
+            data.gwrite_with::<TextureAnimationChunk>(
+                model.texture_animation_chunk.unwrap(),
+                offset,
+                LE,
+            )?;
         }
         if model.geoset_chunk.is_some() {
             data.gwrite_with::<u32>(GEOS_TAG, offset, LE)?;
@@ -103,7 +112,11 @@ impl MDLXModel {
         }
         if model.geoset_animation_chunk.is_some() {
             data.gwrite_with::<u32>(GEOA_TAG, offset, LE)?;
-            data.gwrite_with::<GeosetAnimationChunk>(model.geoset_animation_chunk.unwrap(), offset, LE)?;
+            data.gwrite_with::<GeosetAnimationChunk>(
+                model.geoset_animation_chunk.unwrap(),
+                offset,
+                LE,
+            )?;
         }
         if model.bone_chunk.is_some() {
             data.gwrite_with::<u32>(BONE_TAG, offset, LE)?;
@@ -127,15 +140,27 @@ impl MDLXModel {
         }
         if model.particle_emitter_chunk.is_some() {
             data.gwrite_with::<u32>(PREM_TAG, offset, LE)?;
-            data.gwrite_with::<ParticleEmitterChunk>(model.particle_emitter_chunk.unwrap(), offset, LE)?;
+            data.gwrite_with::<ParticleEmitterChunk>(
+                model.particle_emitter_chunk.unwrap(),
+                offset,
+                LE,
+            )?;
         }
         if model.particle_emitter2_chunk.is_some() {
             data.gwrite_with::<u32>(PRE2_TAG, offset, LE)?;
-            data.gwrite_with::<ParticleEmitter2Chunk>(model.particle_emitter2_chunk.unwrap(), offset, LE)?;
+            data.gwrite_with::<ParticleEmitter2Chunk>(
+                model.particle_emitter2_chunk.unwrap(),
+                offset,
+                LE,
+            )?;
         }
         if model.ribbon_emitter_chunk.is_some() {
             data.gwrite_with::<u32>(RIBB_TAG, offset, LE)?;
-            data.gwrite_with::<RibbonEmitterChunk>(model.ribbon_emitter_chunk.unwrap(), offset, LE)?;
+            data.gwrite_with::<RibbonEmitterChunk>(
+                model.ribbon_emitter_chunk.unwrap(),
+                offset,
+                LE,
+            )?;
         }
         if model.event_object_chunk.is_some() {
             data.gwrite_with::<u32>(EVTS_TAG, offset, LE)?;
@@ -147,7 +172,11 @@ impl MDLXModel {
         }
         if model.collision_shape_chunk.is_some() {
             data.gwrite_with::<u32>(CLID_TAG, offset, LE)?;
-            data.gwrite_with::<CollisionShapeChunk>(model.collision_shape_chunk.unwrap(), offset, LE)?;
+            data.gwrite_with::<CollisionShapeChunk>(
+                model.collision_shape_chunk.unwrap(),
+                offset,
+                LE,
+            )?;
         }
         if model.material_chunk.is_some() {
             data.gwrite_with::<u32>(MTLS_TAG, offset, LE)?;
@@ -350,20 +379,25 @@ impl MDLXModel {
         result
     }
 
-    fn handle_tag(&mut self, tag: u32, data: &[u8], offset: &mut usize) -> Result<(), scroll::Error> {
+    fn handle_tag(
+        &mut self,
+        tag: u32,
+        data: &[u8],
+        offset: &mut usize,
+    ) -> Result<(), scroll::Error> {
         match tag {
             VERS_TAG => {
                 let version_chunk = data.gread_with::<VersionChunk>(offset, LE)?;
                 self.version_chunk = Some(version_chunk);
-            },
+            }
             MODL_TAG => {
                 let model_chunk = data.gread_with::<ModelChunk>(offset, LE)?;
                 self.model_chunk = Some(model_chunk);
-            },
+            }
             SEQS_TAG => {
                 let sequence_chunk = data.gread_with::<SequenceChunk>(offset, LE)?;
                 self.sequence_chunk = Some(sequence_chunk);
-            },
+            }
             GLBS_TAG => {
                 let global_sequence_chunk = data.gread_with::<GlobalSequenceChunk>(offset, LE)?;
                 self.global_sequence_chunk = Some(global_sequence_chunk);
@@ -371,67 +405,69 @@ impl MDLXModel {
             TEXS_TAG => {
                 let texture_chunk = data.gread_with::<TextureChunk>(offset, LE)?;
                 self.texture_chunk = Some(texture_chunk);
-            },
+            }
             TXAN_TAG => {
-                let texture_animation_chunk = data.gread_with::<TextureAnimationChunk>(offset, LE)?;
+                let texture_animation_chunk =
+                    data.gread_with::<TextureAnimationChunk>(offset, LE)?;
                 self.texture_animation_chunk = Some(texture_animation_chunk);
-            },
+            }
             GEOS_TAG => {
                 let geoset_chunk = data.gread_with::<GeosetChunk>(offset, LE)?;
                 self.geoset_chunk = Some(geoset_chunk);
-            },
+            }
             GEOA_TAG => {
                 let geoset_animation_chunk = data.gread_with::<GeosetAnimationChunk>(offset, LE)?;
                 self.geoset_animation_chunk = Some(geoset_animation_chunk);
-            },
+            }
             BONE_TAG => {
                 let bone_chunk = data.gread_with::<BoneChunk>(offset, LE)?;
                 self.bone_chunk = Some(bone_chunk);
-            },
+            }
             LITE_TAG => {
                 let light_chunk = data.gread_with::<LightChunk>(offset, LE)?;
                 self.light_chunk = Some(light_chunk);
-            },
+            }
             HELP_TAG => {
                 let helper_chunk = data.gread_with::<HelperChunk>(offset, LE)?;
                 self.helper_chunk = Some(helper_chunk);
-            },
+            }
             ATCH_TAG => {
                 let attachment_chunk = data.gread_with::<AttachmentChunk>(offset, LE)?;
                 self.attachment_chunk = Some(attachment_chunk);
-            },
+            }
             PIVT_TAG => {
                 let pivot_chunk = data.gread_with::<PivotPointChunk>(offset, LE)?;
                 self.pivot_point_chunk = Some(pivot_chunk);
-            },
+            }
             PREM_TAG => {
                 let particle_emitter_chunk = data.gread_with::<ParticleEmitterChunk>(offset, LE)?;
                 self.particle_emitter_chunk = Some(particle_emitter_chunk);
-            },
+            }
             PRE2_TAG => {
-                let particle_emitter2_chunk = data.gread_with::<ParticleEmitter2Chunk>(offset, LE)?;
+                let particle_emitter2_chunk =
+                    data.gread_with::<ParticleEmitter2Chunk>(offset, LE)?;
                 self.particle_emitter2_chunk = Some(particle_emitter2_chunk);
-            },
+            }
             RIBB_TAG => {
                 let ribbon_emitter_chunk = data.gread_with::<RibbonEmitterChunk>(offset, LE)?;
                 self.ribbon_emitter_chunk = Some(ribbon_emitter_chunk);
-            },
+            }
             EVTS_TAG => {
                 let event_object_chunk = data.gread_with::<EventObjectChunk>(offset, LE)?;
                 self.event_object_chunk = Some(event_object_chunk);
-            },
+            }
             CAMS_TAG => {
                 let camera_chunk = data.gread_with::<CameraChunk>(offset, LE)?;
                 self.camera_chunk = Some(camera_chunk);
-            },
+            }
             CLID_TAG => {
                 let collision_shape_chunk = data.gread_with::<CollisionShapeChunk>(offset, LE)?;
                 self.collision_shape_chunk = Some(collision_shape_chunk);
-            },
+            }
             MTLS_TAG => {
                 let material_chunk = data.gread_with::<MaterialChunk>(offset, LE)?;
                 self.material_chunk = Some(material_chunk);
-            },
+            }
             _ => unreachable!(),
         }
         Ok(())
