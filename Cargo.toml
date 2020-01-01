@@ -6,3 +6,7 @@ edition = "2018"
 
 [dependencies]
 scroll = "0.10"
+log = "0.4.8"
+
+[dev-dependencies]
+env_logger = "0.7.1"

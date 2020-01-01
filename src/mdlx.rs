@@ -35,7 +35,7 @@ impl MDLXModel {
 
             // Iterate over chunks
             while *offset < data.len() {
-                dbg!(&offset);
+                info!("Offset: {}", &offset);
 
                 // For debug
                 let mut tag_offset = offset.clone();
@@ -45,9 +45,9 @@ impl MDLXModel {
                 let tag_name = String::from_utf8(tag_buffer).unwrap_or("NOTAG".to_string());
 
                 let tag = data.gread_with::<u32>(offset, LE)?;
-                dbg!(format!("{:X}", &tag));
-                dbg!(&tag);
-                dbg!(&tag_name);
+                info!("TagHex: {}", format!("{:X}", &tag));
+                info!("TagDec: {}", &tag);
+                info!("TagName: {}", &tag_name);
 
                 result.handle_tag(tag, &data, offset)?;
             }

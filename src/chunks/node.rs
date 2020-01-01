@@ -47,10 +47,7 @@ impl ctx::TryFromCtx<'_, Endian> for Node {
         };
 
         while (*offset as u32) < inclusive_size {
-            dbg!(&offset);
             let tag = src.gread_with::<u32>(offset, ctx).unwrap();
-            dbg!(format!("{:X}", &tag));
-            dbg!(&tag);
 
             match tag {
                 KGTR_TAG => {

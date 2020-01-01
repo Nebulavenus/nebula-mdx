@@ -30,10 +30,7 @@ macro_rules! calculate_chunk_size_impl {
         impl $name {
             // Chunk size is a struct size without chunk_size itself.
             pub fn calculate_chunk_size(&mut self) {
-                //dbg!($name);
-                dbg!(&self.chunk_size);
                 self.chunk_size = self.total_bytes_size() as u32 - 4;
-                dbg!(&self.chunk_size);
             }
         }
     };
