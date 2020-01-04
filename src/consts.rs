@@ -31,3 +31,10 @@ pub const KGSC_TAG: u32 = 1129531211;
 
 pub const KGAO_TAG: u32 = 1329678155;
 pub const KGAC_TAG: u32 = 1128351563;
+
+// Geoset specific
+pub const VRTX_TAG: u32 = 1481921110;
+pub const NRMS_TAG: u32 = 1397576270;
+pub const PTYP_TAG: u32 = 1348031568;
+pub const PCNT_TAG: u32 = 1414415184;
+pub const PVTX_TAG: u32 = 1481922128;

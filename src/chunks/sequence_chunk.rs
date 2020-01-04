@@ -1,5 +1,6 @@
 use crate::chunks::BytesTotalSize;
 use scroll::{ctx, Endian, Pread, Pwrite};
+use crate::chunks::Extent;
 use std::mem::size_of_val;
 
 #[derive(PartialEq, Debug)]
@@ -70,9 +71,7 @@ pub struct Sequence {
     pub non_looping: u32,
     pub rarity: f32,
     pub unknown: u32,
-    pub bounds_radius: f32,
-    pub minimum_extent: [f32; 3],
-    pub maximum_extent: [f32; 3],
+    pub extent: Extent,
 }
 
 impl ctx::TryFromCtx<'_, Endian> for Sequence {
@@ -92,17 +91,7 @@ impl ctx::TryFromCtx<'_, Endian> for Sequence {
         let non_looping = src.gread_with::<u32>(offset, ctx)?;
         let rarity = src.gread_with::<f32>(offset, ctx)?;
         let unknown = src.gread_with::<u32>(offset, ctx)?;
-        let bounds_radius = src.gread_with::<f32>(offset, ctx)?;
-        let minimum_extent = [
-            src.gread_with::<f32>(offset, ctx)?,
-            src.gread_with::<f32>(offset, ctx)?,
-            src.gread_with::<f32>(offset, ctx)?,
-        ];
-        let maximum_extent = [
-            src.gread_with::<f32>(offset, ctx)?,
-            src.gread_with::<f32>(offset, ctx)?,
-            src.gread_with::<f32>(offset, ctx)?,
-        ];
+        let extent = src.gread_with::<Extent>(offset, ctx)?;
 
         Ok((
             Sequence {
@@ -113,9 +102,7 @@ impl ctx::TryFromCtx<'_, Endian> for Sequence {
                 non_looping,
                 rarity,
                 unknown,
-                bounds_radius,
-                minimum_extent,
-                maximum_extent,
+                extent,
             },
             *offset,
         ))
@@ -144,13 +131,7 @@ impl ctx::TryIntoCtx<Endian> for Sequence {
         src.gwrite_with::<u32>(self.non_looping, offset, ctx)?;
         src.gwrite_with::<f32>(self.rarity, offset, ctx)?;
         src.gwrite_with::<u32>(self.unknown, offset, ctx)?;
-        src.gwrite_with::<f32>(self.bounds_radius, offset, ctx)?;
-        for id in 0..3 {
-            src.gwrite_with::<f32>(self.minimum_extent[id], offset, ctx)?;
-        }
-        for id in 0..3 {
-            src.gwrite_with::<f32>(self.maximum_extent[id], offset, ctx)?;
-        }
+        src.gwrite_with::<Extent>(self.extent, offset, ctx)?;
 
         Ok(*offset)
     }
@@ -169,9 +150,7 @@ impl BytesTotalSize for Sequence {
         result += size_of_val(&self.non_looping);
         result += size_of_val(&self.rarity);
         result += size_of_val(&self.unknown);
-        result += size_of_val(&self.bounds_radius);
-        result += size_of_val(&self.minimum_extent);
-        result += size_of_val(&self.maximum_extent);
+        result += &self.extent.total_bytes_size();
 
         result
     }
