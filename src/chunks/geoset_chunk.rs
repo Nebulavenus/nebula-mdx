@@ -1,6 +1,10 @@
 use crate::chunks::BytesTotalSize;
-use scroll::{ctx, Endian, Pread, Pwrite, Error};
 use crate::chunks::Extent;
+use crate::consts::{
+    GNDX_TAG, MATS_TAG, MTGC_TAG, NRMS_TAG, PCNT_TAG, PTYP_TAG, PVTX_TAG, UVAS_TAG, UVBS_TAG,
+    VRTX_TAG,
+};
+use scroll::{ctx, Endian, Error, Pread, Pwrite};
 use std::mem::size_of_val;
 
 #[derive(PartialEq, Debug)]
@@ -127,9 +131,10 @@ impl ctx::TryFromCtx<'_, Endian> for Geoset {
             info!("TagName: {}", &tag_name);
 
             if tag_name != expect_tag {
-                return Err(Error::Custom(
-                    format!("Geoset format is not correct. Expected {} - Found {}", expect_tag, tag_name)
-                ));
+                return Err(Error::Custom(format!(
+                    "Geoset format is not correct. Expected {} - Found {}",
+                    expect_tag, tag_name
+                )));
             }
             Ok(())
         };
@@ -179,7 +184,7 @@ impl ctx::TryFromCtx<'_, Endian> for Geoset {
 
         let faces_count = src.gread_with::<u32>(offset, ctx)?;
         let mut faces = Vec::new();
-        for _ in 0..faces_count {
+        for _ in 0..faces_count / 3 {
             let value = src.gread_with::<Face>(offset, ctx)?;
             faces.push(value);
         }
@@ -214,6 +219,7 @@ impl ctx::TryFromCtx<'_, Endian> for Geoset {
             matrix_indexes.push(value);
         }
 
+        // Geoset inner fields
         let material_id = src.gread_with::<u32>(offset, ctx)?;
         let selection_group = src.gread_with::<u32>(offset, ctx)?;
         let selection_type = src.gread_with::<u32>(offset, ctx)?;
@@ -238,33 +244,36 @@ impl ctx::TryFromCtx<'_, Endian> for Geoset {
             texture_coordinate_sets.push(value);
         }
 
-        Ok((Geoset {
-            inclusive_size,
-            vertex_count,
-            vertex_positions,
-            normal_count,
-            vertex_normals,
-            face_type_groups_count,
-            face_type_groups,
-            face_groups_count,
-            face_groups,
-            faces_count,
-            faces,
-            vertex_groups_count,
-            vertex_groups,
-            matrix_groups_count,
-            matrix_groups,
-            matrix_indexes_count,
-            matrix_indexes,
-            material_id,
-            selection_group,
-            selection_type,
-            extent,
-            extents_count,
-            extent_sequences,
-            texture_coordinate_sets_count,
-            texture_coordinate_sets,
-        }, *offset))
+        Ok((
+            Geoset {
+                inclusive_size,
+                vertex_count,
+                vertex_positions,
+                normal_count,
+                vertex_normals,
+                face_type_groups_count,
+                face_type_groups,
+                face_groups_count,
+                face_groups,
+                faces_count,
+                faces,
+                vertex_groups_count,
+                vertex_groups,
+                matrix_groups_count,
+                matrix_groups,
+                matrix_indexes_count,
+                matrix_indexes,
+                material_id,
+                selection_group,
+                selection_type,
+                extent,
+                extents_count,
+                extent_sequences,
+                texture_coordinate_sets_count,
+                texture_coordinate_sets,
+            },
+            *offset,
+        ))
     }
 }
 
@@ -274,9 +283,94 @@ impl ctx::TryIntoCtx<Endian> for Geoset {
     fn try_into_ctx(self, src: &mut [u8], ctx: Endian) -> Result<usize, Self::Error> {
         let offset = &mut 0;
 
-        //src.gwrite_with::<u32>(self.chunk_size, offset, ctx)?;
+        src.gwrite_with::<u32>(self.inclusive_size, offset, ctx)?;
 
-        //src.gwrite_with::<&[u8]>(self.bytes.as_slice(), offset, ())?;
+        // VRTX
+        src.gwrite_with::<u32>(VRTX_TAG, offset, ctx)?;
+
+        src.gwrite_with::<u32>(self.vertex_count, offset, ctx)?;
+        for value in self.vertex_positions {
+            src.gwrite_with::<VertexPosition>(value, offset, ctx)?;
+        }
+
+        // NRMS
+        src.gwrite_with::<u32>(NRMS_TAG, offset, ctx)?;
+
+        src.gwrite_with::<u32>(self.normal_count, offset, ctx)?;
+        for value in self.vertex_normals {
+            src.gwrite_with::<VertexNormal>(value, offset, ctx)?;
+        }
+
+        // PTYP
+        src.gwrite_with::<u32>(PTYP_TAG, offset, ctx)?;
+
+        src.gwrite_with::<u32>(self.face_type_groups_count, offset, ctx)?;
+        for value in self.face_type_groups {
+            src.gwrite_with::<FaceTypeGroup>(value, offset, ctx)?;
+        }
+
+        // PCNT
+        src.gwrite_with::<u32>(PCNT_TAG, offset, ctx)?;
+
+        src.gwrite_with::<u32>(self.face_groups_count, offset, ctx)?;
+        for value in self.face_groups {
+            src.gwrite_with::<FaceGroup>(value, offset, ctx)?;
+        }
+
+        // PVTX
+        src.gwrite_with::<u32>(PVTX_TAG, offset, ctx)?;
+
+        // DONT FORGET TRICK HERE.
+        // faces_count should be always faces.len() * 3 when writing, and faces_count / 3 by reading
+        src.gwrite_with::<u32>(self.faces_count, offset, ctx)?;
+        for value in self.faces {
+            src.gwrite_with::<Face>(value, offset, ctx)?;
+        }
+
+        // GNDX
+        src.gwrite_with::<u32>(GNDX_TAG, offset, ctx)?;
+
+        src.gwrite_with::<u32>(self.vertex_groups_count, offset, ctx)?;
+        for value in self.vertex_groups {
+            src.gwrite_with::<VertexGroup>(value, offset, ctx)?;
+        }
+
+        // MTGC
+        src.gwrite_with::<u32>(MTGC_TAG, offset, ctx)?;
+
+        src.gwrite_with::<u32>(self.matrix_groups_count, offset, ctx)?;
+        for value in self.matrix_groups {
+            src.gwrite_with::<MatrixGroup>(value, offset, ctx)?;
+        }
+
+        // MATS
+        src.gwrite_with::<u32>(MATS_TAG, offset, ctx)?;
+
+        src.gwrite_with::<u32>(self.matrix_indexes_count, offset, ctx)?;
+        for value in self.matrix_indexes {
+            src.gwrite_with::<MatrixIndex>(value, offset, ctx)?;
+        }
+
+        // Geoset inner fields
+        src.gwrite_with::<u32>(self.material_id, offset, ctx)?;
+        src.gwrite_with::<u32>(self.selection_group, offset, ctx)?;
+        src.gwrite_with::<u32>(self.selection_type, offset, ctx)?;
+
+        // Extents
+        src.gwrite_with::<Extent>(self.extent, offset, ctx)?;
+        src.gwrite_with::<u32>(self.extents_count, offset, ctx)?;
+        for value in self.extent_sequences {
+            src.gwrite_with::<Extent>(value, offset, ctx)?;
+        }
+
+        // UVAS | UVBS
+        src.gwrite_with::<u32>(UVAS_TAG, offset, ctx)?;
+
+        src.gwrite_with::<u32>(self.texture_coordinate_sets_count, offset, ctx)?;
+        for value in self.texture_coordinate_sets {
+            src.gwrite_with::<u32>(UVBS_TAG, offset, ctx)?;
+            src.gwrite_with::<TextureCoordinateSet>(value, offset, ctx)?;
+        }
 
         Ok(*offset)
     }
@@ -497,7 +591,7 @@ impl ctx::TryFromCtx<'_, Endian> for FaceGroup {
     fn try_from_ctx(src: &[u8], ctx: Endian) -> Result<(Self, usize), Self::Error> {
         let offset = &mut 0;
 
-        let number_of_indexes= src.gread_with::<u32>(offset, ctx)?;
+        let number_of_indexes = src.gread_with::<u32>(offset, ctx)?;
 
         Ok((FaceGroup { number_of_indexes }, *offset))
     }
@@ -542,7 +636,14 @@ impl ctx::TryFromCtx<'_, Endian> for Face {
         let index2 = src.gread_with::<u16>(offset, ctx)?;
         let index3 = src.gread_with::<u16>(offset, ctx)?;
 
-        Ok((Face { index1, index2, index3 }, *offset))
+        Ok((
+            Face {
+                index1,
+                index2,
+                index3,
+            },
+            *offset,
+        ))
     }
 }
 
@@ -715,7 +816,13 @@ impl ctx::TryFromCtx<'_, Endian> for TextureCoordinateSet {
         assert_eq!(count as usize, texture_coordinates.len());
         assert_eq!(texture_coordinates.capacity(), texture_coordinates.len());
 
-        Ok((TextureCoordinateSet { count, texture_coordinates }, *offset))
+        Ok((
+            TextureCoordinateSet {
+                count,
+                texture_coordinates,
+            },
+            *offset,
+        ))
     }
 }
 

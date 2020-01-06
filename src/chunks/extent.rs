@@ -27,11 +27,14 @@ impl ctx::TryFromCtx<'_, Endian> for Extent {
             src.gread_with::<f32>(offset, ctx)?,
         ];
 
-        Ok((Extent {
-            bounds_radius,
-            minimum_extent,
-            maximum_extent,
-        }, *offset))
+        Ok((
+            Extent {
+                bounds_radius,
+                minimum_extent,
+                maximum_extent,
+            },
+            *offset,
+        ))
     }
 }
 

@@ -1,6 +1,6 @@
 use crate::chunks::BytesTotalSize;
-use scroll::{ctx, Endian, Pread, Pwrite};
 use crate::chunks::Extent;
+use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
 
 #[derive(PartialEq, Debug)]
