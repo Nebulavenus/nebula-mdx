@@ -26,6 +26,6 @@ mod tests {
 
         let bytes = MDLXModel::write_mdx_file(model).unwrap();
         dbg!(&bytes.len());
-        fs::write("testfiles/chaoswarrior_resave.mdx", bytes).unwrap();
+        fs::write("testfiles/resave.mdx", bytes).unwrap();
     }
 }

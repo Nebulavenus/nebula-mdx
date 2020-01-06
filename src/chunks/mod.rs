@@ -9,7 +9,7 @@ pub use collision_shape_chunk::CollisionShapeChunk;
 pub use event_object_chunk::EventObjectChunk;
 pub use extent::Extent;
 pub use geoset_animation_chunk::{GeosetAnimation, GeosetAnimationChunk};
-pub use geoset_chunk::GeosetChunk;
+pub use geoset_chunk::{GeosetChunk, Geoset, VertexPosition, VertexGroup, VertexNormal, Face, FaceTypeGroup, FaceGroup, MatrixGroup, MatrixIndex, TextureCoordinateSet};
 pub use global_sequence_chunk::{GlobalSequence, GlobalSequenceChunk};
 pub use helper_chunk::{Helper, HelperChunk};
 pub use light_chunk::LightChunk;
