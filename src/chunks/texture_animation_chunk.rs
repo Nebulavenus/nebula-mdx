@@ -86,23 +86,18 @@ impl ctx::TryFromCtx<'_, Endian> for TextureAnimation {
 
         while (*offset as u32) < inclusive_size {
             let tag = src.gread_with::<u32>(offset, ctx).unwrap();
-            dbg!(format!("{:X}", &tag));
-            dbg!(&tag);
 
             match tag {
                 KTAT_TAG => {
                     let ktat = src.gread_with::<TextureTranslation>(offset, ctx)?;
-                    //dbg!(&ktat);
                     texture_animation.texture_translation = Some(ktat);
                 }
                 KTAR_TAG => {
                     let ktar = src.gread_with::<TextureRotation>(offset, ctx)?;
-                    //dbg!(&ktar);
                     texture_animation.texture_rotation = Some(ktar);
                 }
                 KTAS_TAG => {
                     let ktas = src.gread_with::<TextureScaling>(offset, ctx)?;
-                    //dbg!(&ktas);
                     texture_animation.texture_scaling = Some(ktas);
                 }
                 _ => unreachable!(),
