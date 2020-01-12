@@ -7,7 +7,8 @@ const VERS_TAG: u32 = 432412312;
 
 #[derive(NMread, Debug)]
 pub struct VersionChunk {
-    #[nebula(tag = VERS_TAG)]
+    //#[nebula(tag = VERS_TAG)]
+    #[nebula(tag = "VERS_TAG")]
     pub chunk_size: u32,
     pub version: u32,
 }
