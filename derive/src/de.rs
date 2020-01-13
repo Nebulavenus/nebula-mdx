@@ -24,26 +24,73 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
 
     // Struct fields
     let fieldname = fields.named.iter().map(|f| &f.ident);
-    let fieldty = fields.named.iter().map(|f| &f.ty);
-    let fieldtag = fields.named.iter().map(|f| 
-        if let Ok(Some(s)) = attr::tag_to_write(f) {
+    let fieldty = fields.named.iter().map(|f| {
+        let ty = &f.ty;
+        match *ty {
+            // Only for [u8; size]?
+            syn::Type::Array(ref _arr) => {
+                unimplemented!();
+            }
+            syn::Type::Path(ref p) => {
+                #[allow(unused_assignments)]
+                let mut expr = quote! {};
+                // All types without angle brackets
+                if let Some(field_type) = p.path.get_ident() {
+                    //dbg!(&field_type);
+                    match field_type.to_string().as_str() {
+                        "String" => {
+                            // Max name len comes from #fieldty in final expand
+                            expr = quote! {
+                                let name = src.gread::<&str>(&mut offset.clone())?.to_string();
+                                *offset += max_name_len;
+                                name
+                            }
+                        },
+                        "u32" => {
+                            expr = quote! { src.gread_with::<#ty>(offset, ctx)? }
+                        },
+                        _ => panic!("unknown type: {}", field_type.to_string().as_str()),
+                    }
+                    
+                } else {
+                    // Make work with Vec<>
+                    unimplemented!();
+                }
+                //let type_str = format!("{:#?}", *ty);
+                //dbg!(type_str);
+
+                expr
+            },
+            _ => {
+                panic!("Is this struct or what?");
+            }
+        }
+    });
+    let fieldtag = fields.named.iter().map(|f| {
+        let mut expr = quote! {};
+        if let Ok(Some(s)) = attr::tag_to_rw(f) {
             let tag_ident = Ident::new(s.as_str(), Span::call_site());
-            quote! {
+            expr = quote! {
                 let read_tag = src.gread_with::<u32>(offset, ctx)?;
                 assert_eq!(read_tag, #tag_ident as u32);
             }
-        } else {
-            quote! {}
         }
-    );
+        if let Ok(Some(s)) = attr::length_of_string(f) {
+            if let Ok(length) = s.parse::<usize>() {
+                expr = quote! {
+                    let max_name_len = #length;
+                }
+            }
+        }
+        expr
+    });
 
     // Implement read methods for every field in struct
     let items = quote! {
         #(
             #fieldname: {
                 #fieldtag
-                //TODO: match #fieldty
-                src.gread_with::<#fieldty>(offset, ctx)?
+                #fieldty
             },
         )*
     };

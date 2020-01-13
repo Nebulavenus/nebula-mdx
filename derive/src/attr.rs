@@ -1,7 +1,7 @@
-use syn::{Attribute, Error, Field, Lit, Meta, NestedMeta, Result, parse_quote};
+use syn::{Attribute, Error, Field, Lit, Meta, NestedMeta, Result};
 
-/// Find value of #[nebula(tag = "<expr>")] attribute
-fn attr_value(attrs: &[Attribute]) -> Result<Option<String>> {
+/// Find value of #[nebula(<exval> = "<expr>")] attribute
+fn attr_value(attrs: &[Attribute], exval: &str) -> Result<Option<String>> {
     let mut result = None;
 
     for attr in attrs {
@@ -16,7 +16,7 @@ fn attr_value(attrs: &[Attribute]) -> Result<Option<String>> {
 
         for meta in &list.nested {
             if let NestedMeta::Meta(Meta::NameValue(value)) = meta {
-                if value.path.is_ident("tag") {
+                if value.path.is_ident(exval) {
                     if let Lit::Str(s) = &value.lit {
                         if result.is_some() {
                             return Err(Error::new_spanned(meta, "duplicate attribute"));
@@ -32,7 +32,12 @@ fn attr_value(attrs: &[Attribute]) -> Result<Option<String>> {
     Ok(result)
 }
 
-pub fn tag_to_write(field: &Field) -> Result<Option<String>> {
-    let tag = attr_value(&field.attrs)?;
-    Ok(tag)
+pub fn tag_to_rw(field: &Field) -> Result<Option<String>> {
+    let val = attr_value(&field.attrs, "tag")?;
+    Ok(val)
+}
+
+pub fn length_of_string(field: &Field) -> Result<Option<String>> {
+    let val = attr_value(&field.attrs, "length")?;
+    Ok(val)
 }
