@@ -1,5 +1,5 @@
 use crate::{attr};
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::{Span, TokenStream, Ident};
 use quote::quote;
 use syn::{
     Data, DataStruct, DeriveInput, Error, Fields, FieldsNamed, Result,
@@ -25,17 +25,24 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
     // Struct fields
     let fieldname = fields.named.iter().map(|f| &f.ident);
     let fieldty = fields.named.iter().map(|f| &f.ty);
-    let _fieldtag = fields
-        .named
-        .iter()
-        .map(attr::tag_to_write)
-        .collect::<Result<Vec<_>>>()?;
+    let fieldtag = fields.named.iter().map(|f| 
+        if let Ok(Some(s)) = attr::tag_to_write(f) {
+            let tag_ident = Ident::new(s.as_str(), Span::call_site());
+            quote! {
+                let read_tag = src.gread_with::<u32>(offset, ctx)?;
+                assert_eq!(read_tag, #tag_ident as u32);
+            }
+        } else {
+            quote! {}
+        }
+    );
 
     // Implement read methods for every field in struct
     let items = quote! {
         #(
             #fieldname: {
-                //TODO: match #fieldty, check for #fieldtag
+                #fieldtag
+                //TODO: match #fieldty
                 src.gread_with::<#fieldty>(offset, ctx)?
             },
         )*

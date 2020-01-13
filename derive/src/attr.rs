@@ -1,6 +1,6 @@
-use syn::{Attribute, Error, Field, Lit, Meta, NestedMeta, Result};
+use syn::{Attribute, Error, Field, Lit, Meta, NestedMeta, Result, parse_quote};
 
-/// Find value of #[nebula(tag = <expr>)] attribute
+/// Find value of #[nebula(tag = "<expr>")] attribute
 fn attr_value(attrs: &[Attribute]) -> Result<Option<String>> {
     let mut result = None;
 
@@ -32,7 +32,7 @@ fn attr_value(attrs: &[Attribute]) -> Result<Option<String>> {
     Ok(result)
 }
 
-pub fn tag_to_write(field: &Field) -> Result<String> {
+pub fn tag_to_write(field: &Field) -> Result<Option<String>> {
     let tag = attr_value(&field.attrs)?;
-    Ok(tag.unwrap_or_default())
+    Ok(tag)
 }
