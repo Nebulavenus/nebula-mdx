@@ -28,8 +28,18 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
         let ty = &f.ty;
         match *ty {
             // Only for [u8; size]?
-            syn::Type::Array(ref _arr) => {
-                unimplemented!();
+            syn::Type::Array(ref array) => {
+                match array.len {
+                    syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Int(ref int), ..}) => {
+                        let size = int.base10_parse::<usize>().unwrap();
+                        quote! {
+                            let mut tmp: #ty = [0; #size];
+                            src.gread_inout_with(offset, &mut tmp, ctx)?; 
+                            tmp
+                        }
+                    },
+                    _ => syn::Error::new_spanned(array, "NMread derive with bad array constexpr").to_compile_error(),
+                }
             }
             syn::Type::Path(ref p) => {
                 #[allow(unused_assignments)]
@@ -49,23 +59,61 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
                         "u32" => {
                             expr = quote! { src.gread_with::<#ty>(offset, ctx)? }
                         },
-                        _ => panic!("unknown type: {}", field_type.to_string().as_str()),
+                        _ => expr = syn::Error::new_spanned(field_type, format!("'{}' this type is not supported", field_type.to_string())).to_compile_error(),
                     }
-                    
                 } else {
-                    // Make work with Vec<>
-                    unimplemented!();
+                    //dbg!(&p.path);
+                    let angle_ident = &p.path.segments[0].ident;
+                    match angle_ident.to_string().as_str() {
+                        "Vec" => {
+                            if let syn::PathArguments::AngleBracketed(syn::AngleBracketedGenericArguments { args: val, ..}) = &p.path.segments[0].arguments {
+                                //dbg!(val);
+                                if let syn::GenericArgument::Type(syn::Type::Path(syn::TypePath { path, ..})) = val.iter().next().unwrap() {
+                                    if let Some(inner_type) =  path.get_ident() {
+                                        //dbg!(inner_type);
+
+                                        expr = quote! {
+                                            // Right here comes vec_behaviour from #fieldtag
+                                            match vec_behaviour {
+                                                "inclusive" => {
+                                                    let mut data = Vec::new();
+                                                    let mut total_size = 0u32;
+                                                    while total_size < Self.chunk_size {
+                                                        let val = src.gread_with::<#inner_type>(offset, ctx)?;
+                                                        total_size += val.inclusive_size;
+                                                        data.push(val);
+                                                    }
+                                                },
+                                                "normal" => {
+                                                    let values_count = src.gread_with::<u32>(offset, ctx)?;
+                                                    let mut values = Vec::<#inner_type>::with_capacity(values_count);
+                                                    for _ in 0..values_count {
+                                                        let value = src.gread_with::<#inner_type>(offset, ctx)?;
+                                                        values.push(value);
+                                                    }
+                                                    values
+                                                },
+                                                _ => unreachable!(),
+                                            }
+                                        };
+                                    } else {
+                                        expr = syn::Error::new_spanned(path, "Multiple angle brackets are not supported.").to_compile_error();
+                                    }
+                                }
+                            }
+                        },
+                        _ => expr = syn::Error::new_spanned(angle_ident, format!("{} :unsupported angled type", angle_ident.to_string())).to_compile_error(),
+                    }
                 }
-                //let type_str = format!("{:#?}", *ty);
-                //dbg!(type_str);
 
                 expr
             },
             _ => {
-                panic!("Is this struct or what?");
+                syn::Error::new_spanned(ty, "Is this struct or what?").to_compile_error()
             }
         }
     });
+    
     let fieldtag = fields.named.iter().map(|f| {
         let mut expr = quote! {};
         if let Ok(Some(s)) = attr::tag_to_rw(f) {
@@ -82,6 +130,20 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
                 }
             }
         }
+        if let Ok(Some(s)) = attr::vec_behaviour(f) {
+            match s.as_str() {
+                // For chunks
+                "inclusive" => {
+                    expr = quote! { let vec_behaviour = #s; };
+                },
+                // For cases where first comes sequence_number, then array with the data
+                "normal" => {
+                    expr = quote! { let vec_behaviour = #s; };
+                },
+                _ => expr = syn::Error::new_spanned(f, format!("'{}' is unknown value for this attribute", s.as_str())).to_compile_error(),
+            }
+        }
+                                        
         expr
     });
 

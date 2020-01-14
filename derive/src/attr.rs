@@ -41,3 +41,8 @@ pub fn length_of_string(field: &Field) -> Result<Option<String>> {
     let val = attr_value(&field.attrs, "length")?;
     Ok(val)
 }
+
+pub fn vec_behaviour(field: &Field) -> Result<Option<String>> {
+    let val = attr_value(&field.attrs, "behaviour")?;
+    Ok(val)
+}
