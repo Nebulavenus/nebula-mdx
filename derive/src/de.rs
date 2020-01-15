@@ -34,7 +34,7 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
                         let size = int.base10_parse::<usize>().unwrap();
                         quote! {
                             let mut tmp: #ty = [0; #size];
-                            src.gread_inout_with(offset, &mut tmp, ctx)?; 
+                            src.gread_inout_with(offset, &mut tmp, ctx)?;
                             tmp
                         }
                     },
@@ -54,11 +54,14 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
                                 let name = src.gread::<&str>(&mut offset.clone())?.to_string();
                                 *offset += max_name_len;
                                 name
-                            }
+                            };
                         },
                         "u32" => {
-                            expr = quote! { src.gread_with::<#ty>(offset, ctx)? }
+                            expr = quote! { src.gread_with::<#ty>(offset, ctx)? };
                         },
+                        "f32" => {
+                            expr = quote! { src.gread_with::<#ty>(offset, ctx)? };
+                        }
                         _ => expr = syn::Error::new_spanned(field_type, format!("'{}' this type is not supported", field_type.to_string())).to_compile_error(),
                     }
                 } else {
@@ -70,32 +73,41 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
                                 //dbg!(val);
                                 if let syn::GenericArgument::Type(syn::Type::Path(syn::TypePath { path, ..})) = val.iter().next().unwrap() {
                                     if let Some(inner_type) =  path.get_ident() {
-                                        //dbg!(inner_type);
 
-                                        expr = quote! {
-                                            // Right here comes vec_behaviour from #fieldtag
-                                            match vec_behaviour {
+                                        // Check for vec_behaviour attribute tag and generate code suited for this type of behaviour
+                                        if let Ok(Some(s)) = attr::vec_behaviour(f) {
+                                            match s.as_str() {
+                                                // For chunks
                                                 "inclusive" => {
-                                                    let mut data = Vec::new();
-                                                    let mut total_size = 0u32;
-                                                    while total_size < Self.chunk_size {
-                                                        let val = src.gread_with::<#inner_type>(offset, ctx)?;
-                                                        total_size += val.inclusive_size;
-                                                        data.push(val);
-                                                    }
+                                                    expr = quote! {
+                                                        let mut data = Vec::new();
+                                                        let mut total_size = 0u32;
+                                                        // Previous value
+                                                        *offset -= 4;
+                                                        let chunk_size = src.gread_with::<u32>(offset, ctx)?;
+                                                        while total_size < chunk_size {
+                                                            let val = src.gread_with::<#inner_type>(offset, ctx)?;
+                                                            total_size += val.inclusive_size;
+                                                            data.push(val);
+                                                        }
+                                                        data
+                                                    };
                                                 },
+                                                // For cases where first comes sequence_number, then array with the data
                                                 "normal" => {
-                                                    let values_count = src.gread_with::<u32>(offset, ctx)?;
-                                                    let mut values = Vec::<#inner_type>::with_capacity(values_count);
-                                                    for _ in 0..values_count {
-                                                        let value = src.gread_with::<#inner_type>(offset, ctx)?;
-                                                        values.push(value);
-                                                    }
-                                                    values
+                                                    expr = quote! {
+                                                        let values_count = src.gread_with::<u32>(offset, ctx)?;
+                                                        let mut values = Vec::<#inner_type>::with_capacity(values_count as usize);
+                                                        for _ in 0..values_count {
+                                                            let value = src.gread_with::<#inner_type>(offset, ctx)?;
+                                                            values.push(value);
+                                                        }
+                                                        values
+                                                    };
                                                 },
-                                                _ => unreachable!(),
+                                                _ => expr = syn::Error::new_spanned(f, format!("'{}' is unknown value for this attribute", s.as_str())).to_compile_error(),
                                             }
-                                        };
+                                        }
                                     } else {
                                         expr = syn::Error::new_spanned(path, "Multiple angle brackets are not supported.").to_compile_error();
                                     }
@@ -108,9 +120,7 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
 
                 expr
             },
-            _ => {
-                syn::Error::new_spanned(ty, "Is this struct or what?").to_compile_error()
-            }
+            _ => syn::Error::new_spanned(ty, "Is this struct or what?").to_compile_error(),
         }
     });
     
@@ -134,11 +144,11 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
             match s.as_str() {
                 // For chunks
                 "inclusive" => {
-                    expr = quote! { let vec_behaviour = #s; };
+                    // skip it
                 },
                 // For cases where first comes sequence_number, then array with the data
                 "normal" => {
-                    expr = quote! { let vec_behaviour = #s; };
+                    // skip it
                 },
                 _ => expr = syn::Error::new_spanned(f, format!("'{}' is unknown value for this attribute", s.as_str())).to_compile_error(),
             }

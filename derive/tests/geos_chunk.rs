@@ -17,10 +17,10 @@ const VRTX_TAG: u32 = 1481921110;
 
 #[derive(NMread, Debug)]
 pub struct Geoset {
-    pub inclusize_size: u32,
+    pub inclusive_size: u32,
 
     #[nebula(tag = "VRTX_TAG")]
-    pub vertex_count: u32,
+    //pub vertex_count: u32, // this is now inside vertex_positions
     #[nebula(behaviour = "normal")]
     pub vertex_positions: Vec<VertexPosition>,
 }
@@ -32,12 +32,10 @@ pub struct VertexPosition {
 
 #[test]
 fn geos_chunk_read_test() {
-    let mut buffer = [0u8; 348];
-    buffer.pwrite_with::<u32>(1397704007u32, 0, LE).unwrap();
-    buffer.pwrite_with::<u32>(27079, 4, LE).unwrap();
-    buffer.pwrite_with::<u32>(22596, 8, LE).unwrap();
-    buffer.pwrite_with::<u32>(800, 344, LE).unwrap();
+    use std::include_bytes;
 
-    let chunk: GeosChunk = buffer.pread_with(0, LE).unwrap();
+    let bytes = include_bytes!("../../testfiles/geos_chunk.mdx");
+
+    let chunk: GeosChunk = bytes.pread_with(0, LE).unwrap();
     dbg!("{:?}", &chunk);
 }

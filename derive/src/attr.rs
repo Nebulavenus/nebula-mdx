@@ -25,6 +25,7 @@ fn attr_value(attrs: &[Attribute], exval: &str) -> Result<Option<String>> {
                         continue;
                     }
                 }
+                continue;
             }
             return Err(Error::new_spanned(meta, "unsupported attribute"));
         }
