@@ -26,24 +26,27 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
     let fieldname = fields.named.iter().map(|f| &f.ident);
     let fieldty = fields.named.iter().map(|f| {
         let ty = &f.ty;
+        #[allow(unused_assignments)]
+        let mut expr = quote! {};
         match *ty {
             // Only for [u8; size]?
             syn::Type::Array(ref array) => {
-                match array.len {
-                    syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Int(ref int), ..}) => {
-                        let size = int.base10_parse::<usize>().unwrap();
-                        quote! {
-                            let mut tmp: #ty = [0; #size];
-                            src.gread_inout_with(offset, &mut tmp, ctx)?;
-                            tmp
-                        }
-                    },
-                    _ => syn::Error::new_spanned(array, "NMread derive with bad array constexpr").to_compile_error(),
+                if let syn::Type::Path(tp) = array.elem.as_ref() {
+                    let inner_ty = tp.path.get_ident().unwrap();
+                    match array.len {
+                        syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Int(ref int), ..}) => {
+                            let size = int.base10_parse::<usize>().unwrap();
+                            expr = quote! {
+                                let mut tmp: #ty = [<#inner_ty>::default(); #size];
+                                src.gread_inout_with(offset, &mut tmp, ctx)?;
+                                tmp
+                            }
+                        },
+                        _ => expr = syn::Error::new_spanned(array, "NMread derive with bad array constexpr").to_compile_error(),
+                    }
                 }
             }
             syn::Type::Path(ref p) => {
-                #[allow(unused_assignments)]
-                let mut expr = quote! {};
                 // All types without angle brackets
                 if let Some(field_type) = p.path.get_ident() {
                     //dbg!(&field_type);
@@ -117,11 +120,10 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
                         _ => expr = syn::Error::new_spanned(angle_ident, format!("{} :unsupported angled type", angle_ident.to_string())).to_compile_error(),
                     }
                 }
-
-                expr
             },
-            _ => syn::Error::new_spanned(ty, "Is this struct or what?").to_compile_error(),
+            _ => expr = syn::Error::new_spanned(ty, "Is this struct or what?").to_compile_error(),
         }
+        expr
     });
     
     let fieldtag = fields.named.iter().map(|f| {
