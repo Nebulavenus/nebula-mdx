@@ -60,7 +60,9 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
                         "f32" => {
                             expr = quote! { result += size_of_val(&self.#field_ident); };
                         }
-                        _ => expr = syn::Error::new_spanned(field_type, format!("'{}' this type is not supported", field_type.to_string())).to_compile_error(),
+                        _ => {
+                            expr = quote! { result += &self.#field_ident.total_bytes_size(); };
+                        }
                     }
                 } else {
                     //dbg!(&p.path);

@@ -1,4 +1,4 @@
-use nebula_mdx_derive_internal::NMread;
+use nebula_mdx_internal::NMread;
 #[allow(unused_imports)]
 use scroll::{Pread, Pwrite, LE};
 

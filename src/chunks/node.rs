@@ -84,8 +84,7 @@ impl ctx::TryIntoCtx<Endian> for Node {
         for _ in 0..max_name_len {
             src.gwrite_with::<u8>(0x0, null_offset, ctx)?;
         }
-        src.gwrite_with::<&str>(self.name.as_ref(), &mut offset.clone(), ())?
-            .to_string();
+        src.gwrite_with::<&str>(self.name.as_ref(), &mut offset.clone(), ())?;
         *offset += max_name_len;
 
         src.gwrite_with::<u32>(self.object_id, offset, ctx)?;

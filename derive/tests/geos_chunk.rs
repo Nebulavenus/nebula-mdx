@@ -1,4 +1,4 @@
-use nebula_mdx_derive_internal::{NMread, NMbts};
+use nebula_mdx_internal::{NMread, NMbts};
 #[allow(unused_imports)]
 use scroll::{Pread, Pwrite, LE};
 
@@ -40,8 +40,7 @@ fn geos_chunk_read_test() {
 
     let bytes = include_bytes!("../../testfiles/geos_chunk.mdx");
 
-    let chunk: GeosChunk = bytes[..bytes.len()-4].pread_with(0, LE).unwrap();
-    dbg!(&chunk.total_bytes_size());
+    let chunk: GeosChunk = bytes.pread_with(0, LE).unwrap();
 
-    //assert_eq!(bytes.len(), chunk.total_bytes_size()-4-4);
+    assert_eq!(bytes.len(), chunk.total_bytes_size());
 }

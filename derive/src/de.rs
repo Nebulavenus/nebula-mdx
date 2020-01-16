@@ -59,13 +59,10 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
                                 name
                             };
                         },
-                        "u32" => {
-                            expr = quote! { src.gread_with::<#ty>(offset, ctx)? };
-                        },
-                        "f32" => {
+                        // Every single possible type, that also implements pread
+                        _ => {
                             expr = quote! { src.gread_with::<#ty>(offset, ctx)? };
                         }
-                        _ => expr = syn::Error::new_spanned(field_type, format!("'{}' this type is not supported", field_type.to_string())).to_compile_error(),
                     }
                 } else {
                     //dbg!(&p.path);

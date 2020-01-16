@@ -11,7 +11,7 @@ members = ["derive"]
 scroll = "0.10"
 log = "0.4.8"
 
-nebula-mdx-derive-internal = { path = "derive"}
+nebula-mdx-internal = { path = "derive" }
 
 [dev-dependencies]
 env_logger = "0.7.1"
