@@ -2,7 +2,7 @@ use crate::chunks::BytesTotalSize;
 use scroll::{ctx, Endian, Pwrite};
 use nebula_mdx_internal::{NMread, NMbts};
 
-#[derive(NMread, NMbts, PartialEq, Debug)]
+#[derive(NMread, NMbts, Default, PartialEq, Debug)]
 pub struct Extent {
     pub bounds_radius: f32,
     pub minimum_extent: [f32; 3],

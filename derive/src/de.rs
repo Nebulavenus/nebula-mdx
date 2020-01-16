@@ -77,6 +77,26 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
                                         // Check for vec_behaviour attribute tag and generate code suited for this type of behaviour
                                         if let Ok(Some(s)) = attr::vec_behaviour(f) {
                                             match s.as_str() {
+                                                // For cases like SEQS -> chunk_size / 132
+                                                "divided" => {
+                                                    expr = quote! {
+                                                        // Get previous chunk size value
+                                                        *offset -= 4;
+                                                        let chunk_size = src.gread_with::<u32>(offset, ctx)?;
+                                                        
+                                                        // Get default total bytes size for this type
+                                                        let bts = <#inner_type>::default().total_bytes_size() as u32;
+
+                                                        let mut data = Vec::new();
+                                                        if let Some(values_count) = u32::checked_div(chunk_size.clone(), bts) {
+                                                            for _ in 0..values_count {
+                                                                let val = src.gread_with::<#inner_type>(offset, ctx)?;
+                                                                data.push(val);
+                                                            }
+                                                        }
+                                                        data
+                                                    }
+                                                }
                                                 // For chunks
                                                 "inclusive" => {
                                                     expr = quote! {
@@ -137,19 +157,6 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
                 expr = quote! {
                     let max_name_len = #length;
                 }
-            }
-        }
-        if let Ok(Some(s)) = attr::vec_behaviour(f) {
-            match s.as_str() {
-                // For chunks
-                "inclusive" => {
-                    // skip it
-                },
-                // For cases where first comes sequence_number, then array with the data
-                "normal" => {
-                    // skip it
-                },
-                _ => expr = syn::Error::new_spanned(f, format!("'{}' is unknown value for this attribute", s.as_str())).to_compile_error(),
             }
         }
                                         

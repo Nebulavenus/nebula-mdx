@@ -77,6 +77,13 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
                                         // Check for vec_behaviour attribute tag and generate code suited for this type of behaviour
                                         if let Ok(Some(s)) = attr::vec_behaviour(f) {
                                             match s.as_str() {
+                                                "divided" => {
+                                                    expr = quote! {
+                                                        for val in &self.#field_ident {
+                                                            result += val.total_bytes_size();
+                                                        }
+                                                    };
+                                                },
                                                 // For chunks
                                                 "inclusive" => {
                                                     expr = quote! {
