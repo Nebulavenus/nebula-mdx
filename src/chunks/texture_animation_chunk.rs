@@ -1,6 +1,6 @@
 use crate::chunks::{BytesTotalSize, TextureRotation, TextureScaling, TextureTranslation};
 use crate::consts::{KTAR_TAG, KTAS_TAG, KTAT_TAG};
-use scroll::{ctx, Endian, Pwrite};
+use scroll::{ctx, Endian, Pread, Pwrite};
 use nebula_mdx_internal::{NMread, NMbts};
 
 #[derive(NMread, NMbts, PartialEq, Debug)]
@@ -29,7 +29,7 @@ impl ctx::TryIntoCtx<Endian> for TextureAnimationChunk {
     }
 }
 
-#[derive(NMread, NMbts, PartialEq, Debug)]
+#[derive(NMbts, PartialEq, Debug)]
 pub struct TextureAnimation {
     pub inclusive_size: u32,
 
@@ -42,6 +42,44 @@ pub struct TextureAnimation {
     #[nebula(tag = "KTAS_TAG")]
     #[nebula(order = "unknown_tag")]
     pub texture_scaling: Option<TextureScaling>,
+}
+
+impl ctx::TryFromCtx<'_, Endian> for TextureAnimation {
+    type Error = scroll::Error;
+
+    fn try_from_ctx(src: &[u8], ctx: Endian) -> Result<(Self, usize), Self::Error> {
+        let offset = &mut 0;
+
+        let inclusive_size = src.gread_with::<u32>(offset, ctx).unwrap();
+        let mut texture_animation = TextureAnimation {
+            inclusive_size,
+            texture_translation: None,
+            texture_rotation: None,
+            texture_scaling: None,
+        };
+
+        while (*offset as u32) < inclusive_size {
+            let tag = src.gread_with::<u32>(offset, ctx).unwrap();
+
+            match tag {
+                KTAT_TAG => {
+                    let ktat = src.gread_with::<TextureTranslation>(offset, ctx)?;
+                    texture_animation.texture_translation = Some(ktat);
+                }
+                KTAR_TAG => {
+                    let ktar = src.gread_with::<TextureRotation>(offset, ctx)?;
+                    texture_animation.texture_rotation = Some(ktar);
+                }
+                KTAS_TAG => {
+                    let ktas = src.gread_with::<TextureScaling>(offset, ctx)?;
+                    texture_animation.texture_scaling = Some(ktas);
+                }
+                _ => unreachable!(),
+            }
+        }
+
+        Ok((texture_animation, *offset))
+    }
 }
 
 impl ctx::TryIntoCtx<Endian> for TextureAnimation {

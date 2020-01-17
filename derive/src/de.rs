@@ -128,6 +128,7 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
                                 // Check for option_order attribute tag and generate code suited for this type
                                 if let Ok(Some(s)) = attr::option_order(f) {
                                     match s.as_str() {
+                                        // TODO: delete this, probably redundant
                                         "unknown_tag" => {
                                             expr = quote! {
                                                 let mut result: Option<#inner_type> = None;
@@ -165,9 +166,23 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
         let mut expr = quote! {};
         if let Ok(Some(s)) = attr::tag_to_rw(f) {
             let tag_ident = Ident::new(s.as_str(), Span::call_site());
-            expr = quote! {
-                let expect_tag = src.gread_with::<u32>(offset, ctx)?;
-                assert_eq!(expect_tag, #tag_ident as u32);
+
+            // Another check inside for #[nebula(order = "unknown_tag")]
+            // do not generate unnesessary err code
+            if let Ok(Some(_)) = attr::option_order(f) {
+                expr = quote! {
+                    let expect_tag = src.gread_with::<u32>(offset, ctx)?;
+                }
+            } else {
+                expr = quote! {
+                    let expect_tag = src.gread_with::<u32>(offset, ctx)?;
+                    if expect_tag != (#tag_ident as u32) {
+                        return Err(scroll::Error::Custom(format!(
+                            "MDX format is not correct. Expected {} - Found {}",
+                            expect_tag, (#tag_ident as u32)
+                        )));
+                    }
+                }
             }
         }
         if let Ok(Some(s)) = attr::length_of_string(f) {
