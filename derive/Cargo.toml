@@ -14,3 +14,4 @@ proc-macro2 = "1"
 
 [dev-dependencies]
 scroll = "0.10.1"
+nebula-mdx = { path = ".." }

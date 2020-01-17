@@ -23,6 +23,7 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
     let structname = &input.ident;
 
     // Struct fields
+    let fieldstructname = fields.named.iter().map(|f| &f.ident);
     let fieldname = fields.named.iter().map(|f| &f.ident);
     let fieldty = fields.named.iter().map(|f| {
         let ty = &f.ty;
@@ -66,75 +67,88 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
                     }
                 } else {
                     //dbg!(&p.path);
-                    let angle_ident = &p.path.segments[0].ident;
-                    match angle_ident.to_string().as_str() {
-                        "Vec" => {
-                            if let syn::PathArguments::AngleBracketed(syn::AngleBracketedGenericArguments { args: val, ..}) = &p.path.segments[0].arguments {
-                                //dbg!(val);
-                                if let syn::GenericArgument::Type(syn::Type::Path(syn::TypePath { path, ..})) = val.iter().next().unwrap() {
-                                    if let Some(inner_type) =  path.get_ident() {
+                    //let angle_ident = &p.path.segments[0].ident;
+                    // Angled brackets support only for ("Vec" | "Option")
+                    if let syn::PathArguments::AngleBracketed(syn::AngleBracketedGenericArguments { args: val, ..}) = &p.path.segments[0].arguments {
+                        //dbg!(val);
+                        if let syn::GenericArgument::Type(syn::Type::Path(syn::TypePath { path, ..})) = val.iter().next().unwrap() {
+                            if let Some(inner_type) =  path.get_ident() {
 
-                                        // Check for vec_behaviour attribute tag and generate code suited for this type of behaviour
-                                        if let Ok(Some(s)) = attr::vec_behaviour(f) {
-                                            match s.as_str() {
-                                                // For cases like SEQS -> chunk_size / 132
-                                                "divided" => {
-                                                    expr = quote! {
-                                                        // Get previous chunk size value
-                                                        *offset -= 4;
-                                                        let chunk_size = src.gread_with::<u32>(offset, ctx)?;
-                                                        
-                                                        // Get default total bytes size for this type
-                                                        let bts = <#inner_type>::default().total_bytes_size() as u32;
+                                // For Vec<#inner_type>
+                                // Check for vec_behaviour attribute tag and generate code suited for this type of behaviour
+                                if let Ok(Some(s)) = attr::vec_behaviour(f) {
+                                    match s.as_str() {
+                                        // For cases like SEQS -> chunk_size / 132
+                                        "divided" => {
+                                            expr = quote! {
+                                                // Get default total bytes size for this type
+                                                let bts = <#inner_type>::default().total_bytes_size() as u32;
 
-                                                        let mut data = Vec::new();
-                                                        if let Some(values_count) = u32::checked_div(chunk_size.clone(), bts) {
-                                                            for _ in 0..values_count {
-                                                                let val = src.gread_with::<#inner_type>(offset, ctx)?;
-                                                                data.push(val);
-                                                            }
-                                                        }
-                                                        data
+                                                let mut data = Vec::new();
+                                                if let Some(values_count) = u32::checked_div(chunk_size.clone(), bts) {
+                                                    for _ in 0..values_count {
+                                                        let val = src.gread_with::<#inner_type>(offset, ctx)?;
+                                                        data.push(val);
                                                     }
                                                 }
-                                                // For chunks
-                                                "inclusive" => {
-                                                    expr = quote! {
-                                                        let mut data = Vec::new();
-                                                        let mut total_size = 0u32;
-                                                        // Previous value
-                                                        *offset -= 4;
-                                                        let chunk_size = src.gread_with::<u32>(offset, ctx)?;
-                                                        while total_size < chunk_size {
-                                                            let val = src.gread_with::<#inner_type>(offset, ctx)?;
-                                                            total_size += val.inclusive_size;
-                                                            data.push(val);
-                                                        }
-                                                        data
-                                                    };
-                                                },
-                                                // For cases where first comes sequence_number, then array with the data
-                                                "normal" => {
-                                                    expr = quote! {
-                                                        let values_count = src.gread_with::<u32>(offset, ctx)?;
-                                                        let mut values = Vec::<#inner_type>::with_capacity(values_count as usize);
-                                                        for _ in 0..values_count {
-                                                            let value = src.gread_with::<#inner_type>(offset, ctx)?;
-                                                            values.push(value);
-                                                        }
-                                                        values
-                                                    };
-                                                },
-                                                _ => expr = syn::Error::new_spanned(f, format!("'{}' is unknown value for this attribute", s.as_str())).to_compile_error(),
+                                                data
                                             }
                                         }
-                                    } else {
-                                        expr = syn::Error::new_spanned(path, "Multiple angle brackets are not supported.").to_compile_error();
+                                        // For chunks
+                                        "inclusive" => {
+                                            expr = quote! {
+                                                let mut data = Vec::new();
+                                                let mut total_size = 0u32;
+                                                // Previous value
+                                                while total_size < chunk_size {
+                                                    let val = src.gread_with::<#inner_type>(offset, ctx)?;
+                                                    total_size += val.inclusive_size;
+                                                    data.push(val);
+                                                }
+                                                data
+                                            };
+                                        },
+                                        // For cases where first comes sequence_number, then array with the data
+                                        "normal" => {
+                                            expr = quote! {
+                                                let values_count = src.gread_with::<u32>(offset, ctx)?;
+                                                let mut values = Vec::<#inner_type>::with_capacity(values_count as usize);
+                                                for _ in 0..values_count {
+                                                    let value = src.gread_with::<#inner_type>(offset, ctx)?;
+                                                    values.push(value);
+                                                }
+                                                values
+                                            };
+                                        },
+                                        _ => expr = syn::Error::new_spanned(f, format!("'{}' is unknown value for this attribute", s.as_str())).to_compile_error(),
                                     }
                                 }
+
+                                // For Option<#inner_type>
+                                // Check for option_order attribute tag and generate code suited for this type
+                                if let Ok(Some(s)) = attr::option_order(f) {
+                                    match s.as_str() {
+                                        "unknown_tag" => {
+                                            //expr = quote! {
+                                                // Read inclusive
+                                                //*offset -= 4;
+                                                //let inclusive_size = src.gread_with::<u32>(offset, ctx).unwrap();
+
+                                                //if (*offset as u32) < inclusive_size {
+
+                                                //}
+                                            //};
+                                        },
+                                        "normal" => {
+
+                                        },
+                                        _ => expr = syn::Error::new_spanned(f, format!("'{}' is unknown value for this attribute", s.as_str())).to_compile_error(),
+                                    }
+                                }
+                            } else {
+                                expr = syn::Error::new_spanned(path, "Multiple angle brackets are not supported.").to_compile_error();
                             }
-                        },
-                        _ => expr = syn::Error::new_spanned(angle_ident, format!("{} :unsupported angled type", angle_ident.to_string())).to_compile_error(),
+                        }
                     }
                 }
             },
@@ -166,10 +180,10 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
     // Implement read methods for every field in struct
     let items = quote! {
         #(
-            #fieldname: {
+            let #fieldname = {
                 #fieldtag
                 #fieldty
-            },
+            };
         )*
     };
 
@@ -180,8 +194,11 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
             fn try_from_ctx(src: &'a [u8], ctx: ::scroll::Endian) -> ::scroll::export::result::Result<(Self, usize), Self::Error> {
                 use ::scroll::Pread;
                 let offset = &mut 0;
-                let data  = #structname { #items };
-                Ok((data, *offset))
+
+                #items
+
+                let result  = #structname { #(#fieldstructname,)* };
+                Ok((result, *offset))
             }
         }
     })

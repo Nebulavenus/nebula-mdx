@@ -65,6 +65,7 @@ impl BytesTotalSize for TextureAnimationChunk {
 pub struct TextureAnimation {
     pub inclusive_size: u32,
 
+    //#[nebula(order = "unknown_tag")]
     pub texture_translation: Option<TextureTranslation>,
     pub texture_rotation: Option<TextureRotation>,
     pub texture_scaling: Option<TextureScaling>,

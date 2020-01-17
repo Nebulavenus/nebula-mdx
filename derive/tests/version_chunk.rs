@@ -1,8 +1,7 @@
 use nebula_mdx_internal::NMread;
 #[allow(unused_imports)]
 use scroll::{Pread, Pwrite, LE};
-
-const VERS_TAG: u32 = 1397900630;
+use nebula_mdx::consts::VERS_TAG;
 
 #[derive(NMread, Debug)]
 pub struct VersionChunk {

@@ -33,17 +33,30 @@ fn attr_value(attrs: &[Attribute], exval: &str) -> Result<Option<String>> {
     Ok(result)
 }
 
+/// Predefined const TAG: u32, like ``VERS_TAG``
+/// #[nebula(tag = "<value>")]
 pub fn tag_to_rw(field: &Field) -> Result<Option<String>> {
     let val = attr_value(&field.attrs, "tag")?;
     Ok(val)
 }
 
+/// Length for the string ``336``, ``80``
+/// #[nebula(length = "<value>")]
 pub fn length_of_string(field: &Field) -> Result<Option<String>> {
     let val = attr_value(&field.attrs, "length")?;
     Ok(val)
 }
 
+/// Posible values are ``inclusive``, ``normal``, ``divided``
+/// #[nebula(behaviour = "<value>")]
 pub fn vec_behaviour(field: &Field) -> Result<Option<String>> {
     let val = attr_value(&field.attrs, "behaviour")?;
+    Ok(val)
+}
+
+/// Posible values are ``unknown_tag``, ``normal``
+/// #[nebula(order = "<value>")]
+pub fn option_order(field: &Field) -> Result<Option<String>> {
+    let val = attr_value(&field.attrs, "order")?;
     Ok(val)
 }

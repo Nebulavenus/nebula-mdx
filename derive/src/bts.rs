@@ -66,52 +66,63 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
                     }
                 } else {
                     //dbg!(&p.path);
-                    let angle_ident = &p.path.segments[0].ident;
-                    match angle_ident.to_string().as_str() {
-                        "Vec" => {
-                            if let syn::PathArguments::AngleBracketed(syn::AngleBracketedGenericArguments { args: val, ..}) = &p.path.segments[0].arguments {
-                                //dbg!(val);
-                                if let syn::GenericArgument::Type(syn::Type::Path(syn::TypePath { path, ..})) = val.iter().next().unwrap() {
-                                    if let Some(_inner_type) =  path.get_ident() {
-
-                                        // Check for vec_behaviour attribute tag and generate code suited for this type of behaviour
-                                        if let Ok(Some(s)) = attr::vec_behaviour(f) {
-                                            match s.as_str() {
-                                                "divided" => {
-                                                    expr = quote! {
-                                                        for val in &self.#field_ident {
-                                                            result += val.total_bytes_size();
-                                                        }
-                                                    };
-                                                },
-                                                // For chunks
-                                                "inclusive" => {
-                                                    expr = quote! {
-                                                        for val in &self.#field_ident {
-                                                            result += val.total_bytes_size();
-                                                        }
-                                                    };
-                                                },
-                                                // For cases where first comes sequence_number, then array with the data
-                                                "normal" => {
-                                                    expr = quote! {
-                                                        //result += &self.#field_ident.len();
-                                                        result += size_of::<u32>();
-                                                        for val in &self.#field_ident {
-                                                            result += val.total_bytes_size();
-                                                        }
-                                                    };
-                                                },
-                                                _ => expr = syn::Error::new_spanned(f, format!("'{}' is unknown value for this attribute", s.as_str())).to_compile_error(),
-                                            }
-                                        }
-                                    } else {
-                                        expr = syn::Error::new_spanned(path, "Multiple angle brackets are not supported.").to_compile_error();
+                    //let angle_ident = &p.path.segments[0].ident;
+                    // Angled brackets support only for ("Vec" | "Option")
+                    if let syn::PathArguments::AngleBracketed(syn::AngleBracketedGenericArguments { args: val, ..}) = &p.path.segments[0].arguments {
+                        //dbg!(val);
+                        if let syn::GenericArgument::Type(syn::Type::Path(syn::TypePath { path, ..})) = val.iter().next().unwrap() {
+                            if let Some(_inner_type) =  path.get_ident() {
+                                
+                                // For Vec<#inner_type> type
+                                // Check for vec_behaviour attribute tag and generate code suited for this type of behaviour
+                                if let Ok(Some(s)) = attr::vec_behaviour(f) {
+                                    match s.as_str() {
+                                        "divided" => {
+                                            expr = quote! {
+                                                for val in &self.#field_ident {
+                                                    result += val.total_bytes_size();
+                                                }
+                                            };
+                                        },
+                                        // For chunks
+                                        "inclusive" => {
+                                            expr = quote! {
+                                                for val in &self.#field_ident {
+                                                    result += val.total_bytes_size();
+                                                }
+                                            };
+                                        },
+                                        // For cases where first comes sequence_number, then array with the data
+                                        "normal" => {
+                                            expr = quote! {
+                                                //result += &self.#field_ident.len();
+                                                result += size_of::<u32>();
+                                                for val in &self.#field_ident {
+                                                    result += val.total_bytes_size();
+                                                }
+                                            };
+                                        },
+                                        _ => expr = syn::Error::new_spanned(f, format!("'{}' is unknown value for this attribute", s.as_str())).to_compile_error(),
                                     }
                                 }
+
+                                // For Option<#inner_type>
+                                // Check for option_order attribute tag and generate code suited for this type
+                                if let Ok(Some(s)) = attr::option_order(f) {
+                                    match s.as_str() {
+                                        "unknown_tag" => {
+
+                                        },
+                                        "normal" => {
+
+                                        },
+                                        _ => expr = syn::Error::new_spanned(f, format!("'{}' is unknown value for this attribute", s.as_str())).to_compile_error(),
+                                    }
+                                }
+                            } else {
+                                expr = syn::Error::new_spanned(path, "Multiple angle brackets are not supported.").to_compile_error();
                             }
-                        },
-                        _ => expr = syn::Error::new_spanned(angle_ident, format!("{} :unsupported angled type", angle_ident.to_string())).to_compile_error(),
+                        }
                     }
                 }
             },

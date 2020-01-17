@@ -1,8 +1,7 @@
 use nebula_mdx_internal::NMread;
 #[allow(unused_imports)]
 use scroll::{Pread, Pwrite, LE};
-
-const MODL_TAG: u32 = 1279545165;
+use nebula_mdx::consts::MODL_TAG;
 
 #[derive(NMread, Debug)]
 pub struct ModelChunk {

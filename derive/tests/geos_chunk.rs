@@ -1,12 +1,8 @@
 use nebula_mdx_internal::{NMread, NMbts};
 #[allow(unused_imports)]
 use scroll::{Pread, Pwrite, LE};
-
-pub trait BytesTotalSize {
-    fn total_bytes_size(&self) -> usize;
-}
-
-const GEOS_TAG: u32 = 1397704007;
+use nebula_mdx::chunks::BytesTotalSize;
+use nebula_mdx::consts::{GEOS_TAG, VRTX_TAG};
 
 #[derive(NMread, NMbts, Debug)]
 pub struct GeosChunk {
@@ -16,8 +12,6 @@ pub struct GeosChunk {
     #[nebula(behaviour = "inclusive")]
     pub data: Vec<Geoset>,
 }
-
-const VRTX_TAG: u32 = 1481921110;
 
 #[derive(NMread, NMbts, Debug)]
 pub struct Geoset {
