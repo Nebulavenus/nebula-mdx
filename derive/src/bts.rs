@@ -111,7 +111,12 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
                                 if let Ok(Some(s)) = attr::option_order(f) {
                                     match s.as_str() {
                                         "unknown_tag" => {
-
+                                            expr = quote! {
+                                                if self.#field_ident.is_some() {
+                                                    result += 4;
+                                                    result += self.#field_ident.as_ref().unwrap().total_bytes_size();
+                                                }
+                                            };
                                         },
                                         "normal" => {
 
@@ -135,8 +140,13 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
         let mut expr = quote! {};
         if let Ok(Some(s)) = attr::tag_to_rw(f) {
             let _tag_ident = Ident::new(s.as_str(), Span::call_site());
-            expr = quote! {
-                result += 4;
+
+            if let Ok(Some(_)) = attr::option_order(f) {
+                // If we have #[nebula(order = "unknown_tag")] do not increment result by 4(tag_size);
+            } else {
+                expr = quote! {
+                    result += 4;
+                }
             }
         }
         if let Ok(Some(s)) = attr::length_of_string(f) {

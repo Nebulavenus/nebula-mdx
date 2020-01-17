@@ -129,15 +129,19 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
                                 if let Ok(Some(s)) = attr::option_order(f) {
                                     match s.as_str() {
                                         "unknown_tag" => {
-                                            //expr = quote! {
-                                                // Read inclusive
-                                                //*offset -= 4;
-                                                //let inclusive_size = src.gread_with::<u32>(offset, ctx).unwrap();
-
-                                                //if (*offset as u32) < inclusive_size {
-
-                                                //}
-                                            //};
+                                            expr = quote! {
+                                                let mut result: Option<#inner_type> = None;
+                                                if (*offset as u32) < inclusive_size {
+                                                    // Reread previous tag
+                                                    *offset -= 4;
+                                                    let tag = src.gread_with::<u32>(offset, ctx).unwrap();
+                                                    if tag == expect_tag {
+                                                        let value = src.gread_with::<#inner_type>(offset, ctx)?;
+                                                        result = Some(value);
+                                                    }
+                                                }
+                                                result
+                                            };
                                         },
                                         "normal" => {
 
@@ -162,8 +166,8 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
         if let Ok(Some(s)) = attr::tag_to_rw(f) {
             let tag_ident = Ident::new(s.as_str(), Span::call_site());
             expr = quote! {
-                let read_tag = src.gread_with::<u32>(offset, ctx)?;
-                assert_eq!(read_tag, #tag_ident as u32);
+                let expect_tag = src.gread_with::<u32>(offset, ctx)?;
+                assert_eq!(expect_tag, #tag_ident as u32);
             }
         }
         if let Ok(Some(s)) = attr::length_of_string(f) {

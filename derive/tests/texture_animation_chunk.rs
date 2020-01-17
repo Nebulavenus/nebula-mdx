@@ -17,12 +17,15 @@ pub struct TextureAnimationChunk {
 pub struct TextureAnimation {
     pub inclusive_size: u32,
 
-    //#[nebula(tag = "KTAT_TAG")]
-    //pub texture_translation: Option<TextureTranslation>,
-    //#[nebula(tag = "KTAR_TAG")]
-    //pub texture_rotation: Option<TextureRotation>,
-    //#[nebula(tag = "KTAS_TAG")]
-    //pub texture_scaling: Option<TextureScaling>,
+    #[nebula(tag = "KTAT_TAG")]
+    #[nebula(order = "unknown_tag")]
+    pub texture_translation: Option<TextureTranslation>,
+    #[nebula(tag = "KTAR_TAG")]
+    #[nebula(order = "unknown_tag")]
+    pub texture_rotation: Option<TextureRotation>,
+    #[nebula(tag = "KTAS_TAG")]
+    #[nebula(order = "unknown_tag")]
+    pub texture_scaling: Option<TextureScaling>,
 }
 
 #[test]
