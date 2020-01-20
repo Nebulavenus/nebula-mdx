@@ -1,9 +1,9 @@
-use nebula_mdx_internal::{NMread, NMbts};
-#[allow(unused_imports)]
-use scroll::{Pread, Pwrite, LE};
 use nebula_mdx::chunks::{BytesTotalSize, TextureRotation, TextureScaling, TextureTranslation};
 #[allow(unused_imports)]
-use nebula_mdx::consts::{TXAN_TAG, KTAR_TAG, KTAS_TAG, KTAT_TAG};
+use nebula_mdx::consts::{KTAR_TAG, KTAS_TAG, KTAT_TAG, TXAN_TAG};
+use nebula_mdx_internal::{NMbts, NMread};
+#[allow(unused_imports)]
+use scroll::{Pread, Pwrite, LE};
 
 #[derive(NMread, NMbts, PartialEq, Debug)]
 pub struct TextureAnimationChunk {
@@ -32,7 +32,6 @@ pub struct TextureAnimation {
 #[test]
 #[should_panic]
 fn texture_animation_chunk_read_test() {
-
     let bytes = include_bytes!("../../testfiles/txan_chunk.mdx");
 
     let chunk: TextureAnimationChunk = bytes.pread_with(0, LE).unwrap();

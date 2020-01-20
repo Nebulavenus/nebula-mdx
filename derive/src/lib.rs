@@ -1,10 +1,10 @@
-#![recursion_limit="1024"]
+#![recursion_limit = "1024"]
 extern crate proc_macro;
 extern crate syn;
 
-mod de;
-mod bts;
 mod attr;
+mod bts;
+mod de;
 
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput};

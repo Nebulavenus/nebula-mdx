@@ -1,8 +1,8 @@
-use nebula_mdx_internal::{NMread, NMbts};
-#[allow(unused_imports)]
-use scroll::{Pread, Pwrite, LE};
 use nebula_mdx::chunks::BytesTotalSize;
 use nebula_mdx::consts::{GEOS_TAG, VRTX_TAG};
+use nebula_mdx_internal::{NMbts, NMread};
+#[allow(unused_imports)]
+use scroll::{Pread, Pwrite, LE};
 
 #[derive(NMread, NMbts, Debug)]
 pub struct GeosChunk {

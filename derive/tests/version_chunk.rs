@@ -1,7 +1,7 @@
+use nebula_mdx::consts::VERS_TAG;
 use nebula_mdx_internal::NMread;
 #[allow(unused_imports)]
 use scroll::{Pread, Pwrite, LE};
-use nebula_mdx::consts::VERS_TAG;
 
 #[derive(NMread, Debug)]
 pub struct VersionChunk {

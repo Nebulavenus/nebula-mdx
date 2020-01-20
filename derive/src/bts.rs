@@ -1,9 +1,7 @@
-use crate::{attr};
-use proc_macro2::{Span, TokenStream, Ident};
+use crate::attr;
+use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
-use syn::{
-    Data, DataStruct, DeriveInput, Error, Fields, FieldsNamed, Result,
-};
+use syn::{Data, DataStruct, DeriveInput, Error, Fields, FieldsNamed, Result};
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     match &input.data {
@@ -135,7 +133,7 @@ pub fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenS
         }
         expr
     });
-    
+
     let fieldtag = fields.named.iter().map(|f| {
         let mut expr = quote! {};
         if let Ok(Some(s)) = attr::tag_to_rw(f) {
