@@ -1,17 +1,35 @@
 use crate::chunks::{BytesTotalSize, TextureRotation, TextureScaling, TextureTranslation};
 use crate::consts::{KTAR_TAG, KTAS_TAG, KTAT_TAG};
 use scroll::{ctx, Endian, Pread, Pwrite};
-use nebula_mdx_internal::{NMread, NMbts};
+use std::mem::size_of_val;
 
-#[derive(NMread, NMbts, PartialEq, Debug)]
+#[derive(PartialEq, Debug)]
 pub struct TextureAnimationChunk {
     pub chunk_size: u32,
 
-    #[nebula(behaviour = "inclusive")]
     pub data: Vec<TextureAnimation>,
 }
 
 calculate_chunk_size_impl!(TextureAnimationChunk);
+
+impl ctx::TryFromCtx<'_, Endian> for TextureAnimationChunk {
+    type Error = scroll::Error;
+
+    fn try_from_ctx(src: &[u8], ctx: Endian) -> Result<(Self, usize), Self::Error> {
+        let offset = &mut 0;
+        let chunk_size = src.gread_with::<u32>(offset, ctx)?;
+
+        let mut data = Vec::new();
+        let mut total_size = 0u32;
+        while total_size < chunk_size {
+            let texture_animation = src.gread_with::<TextureAnimation>(offset, ctx)?;
+            total_size += texture_animation.inclusive_size;
+            data.push(texture_animation);
+        }
+
+        Ok((TextureAnimationChunk { chunk_size, data }, *offset))
+    }
+}
 
 impl ctx::TryIntoCtx<Endian> for TextureAnimationChunk {
     type Error = scroll::Error;
@@ -29,18 +47,26 @@ impl ctx::TryIntoCtx<Endian> for TextureAnimationChunk {
     }
 }
 
-#[derive(NMbts, PartialEq, Debug)]
+impl BytesTotalSize for TextureAnimationChunk {
+    fn total_bytes_size(&self) -> usize {
+        let mut result = 0usize;
+
+        result += size_of_val(&self.chunk_size);
+
+        for texture_animation in &self.data {
+            result += texture_animation.total_bytes_size();
+        }
+
+        result
+    }
+}
+
+#[derive(PartialEq, Debug)]
 pub struct TextureAnimation {
     pub inclusive_size: u32,
 
-    #[nebula(tag = "KTAT_TAG")]
-    #[nebula(order = "unknown_tag")]
     pub texture_translation: Option<TextureTranslation>,
-    #[nebula(tag = "KTAR_TAG")]
-    #[nebula(order = "unknown_tag")]
     pub texture_rotation: Option<TextureRotation>,
-    #[nebula(tag = "KTAS_TAG")]
-    #[nebula(order = "unknown_tag")]
     pub texture_scaling: Option<TextureScaling>,
 }
 
@@ -104,5 +130,32 @@ impl ctx::TryIntoCtx<Endian> for TextureAnimation {
         }
 
         Ok(*offset)
+    }
+}
+
+impl BytesTotalSize for TextureAnimation {
+    fn total_bytes_size(&self) -> usize {
+        let mut result = 0usize;
+
+        result += size_of_val(&self.inclusive_size);
+
+        if self.texture_translation.is_some() {
+            result += 4;
+            result += self
+                .texture_translation
+                .as_ref()
+                .unwrap()
+                .total_bytes_size();
+        }
+        if self.texture_rotation.is_some() {
+            result += 4;
+            result += self.texture_rotation.as_ref().unwrap().total_bytes_size();
+        }
+        if self.texture_scaling.is_some() {
+            result += 4;
+            result += self.texture_scaling.as_ref().unwrap().total_bytes_size();
+        }
+
+        result
     }
 }
