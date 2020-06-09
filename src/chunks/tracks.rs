@@ -192,3 +192,6 @@ create_named_track!(GeosetColorTrack, f32, 3);
 
 create_named_tracks!(GeosetAlpha, GeosetAlphaTrack, f32, 1);
 create_named_tracks!(GeosetColor, GeosetColorTrack, f32, 3);
+
+// KATV
+create_named_track!(AttachmentVisibility, f32, 1);

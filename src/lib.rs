@@ -20,7 +20,7 @@ mod tests {
     fn read_write_mdx_file_api() {
         init();
 
-        let raw_data = fs::read("testfiles/druidcat.mdx").unwrap();
+        let raw_data = fs::read("testfiles/doctor.mdx").unwrap();
         let model = MDLXModel::read_mdx_file(raw_data.clone()).unwrap();
         dbg!(&raw_data.len());
 
