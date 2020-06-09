@@ -194,4 +194,15 @@ create_named_tracks!(GeosetAlpha, GeosetAlphaTrack, f32, 1);
 create_named_tracks!(GeosetColor, GeosetColorTrack, f32, 3);
 
 // KATV
-create_named_track!(AttachmentVisibility, f32, 1);
+create_named_track!(AttachmentVisibilityTrack, f32, 1);
+
+create_named_tracks!(AttachmentVisibility, AttachmentVisibilityTrack, f32, 1);
+
+// KCTR - KCRL - KTTR
+create_named_track!(CameraTranslationTrack, f32, 3);
+create_named_track!(CameraRotationTrack, u32, 1);
+create_named_track!(CameraTargetTranslationTrack, f32, 3);
+
+create_named_tracks!(CameraTranslation, CameraTranslationTrack, f32, 3);
+create_named_tracks!(CameraRotation, CameraRotationTrack, u32, 1);
+create_named_tracks!(CameraTargetTranslation, CameraTargetTranslationTrack, f32, 3);

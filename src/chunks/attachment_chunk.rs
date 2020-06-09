@@ -3,6 +3,8 @@ use crate::consts::{KATV_TAG};
 use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
 
+// TODO(nv): NOT TESTED! WRITE TESTS.
+
 #[derive(PartialEq, Debug)]
 pub struct AttachmentChunk {
     pub chunk_size: u32,
