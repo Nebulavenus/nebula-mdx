@@ -1,17 +1,12 @@
 [package]
 name = "nebula-mdx"
 version = "0.1.0"
-authors = ["Nebula Venus <6595784+Nebulavenus@users.noreply.github.com>"]
+authors = ["Nebula Venus <nebulavenus@tuta.io>"]
 edition = "2018"
-
-[workspace]
-members = ["derive"]
 
 [dependencies]
 scroll = "0.10"
 log = "0.4.8"
-
-nebula-mdx-internal = { path = "derive" }
 
 [dev-dependencies]
 env_logger = "0.7.1"
