@@ -1,4 +1,4 @@
-use crate::chunks::{BytesTotalSize, TextureRotation, TextureScaling, TextureTranslation};
+use crate::chunks::{BytesTotalSize, Transform, Vec3, Vec4};
 use crate::consts::{KTAR_TAG, KTAS_TAG, KTAT_TAG};
 use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
@@ -65,9 +65,9 @@ impl BytesTotalSize for TextureAnimationChunk {
 pub struct TextureAnimation {
     pub inclusive_size: u32,
 
-    pub texture_translation: Option<TextureTranslation>,
-    pub texture_rotation: Option<TextureRotation>,
-    pub texture_scaling: Option<TextureScaling>,
+    pub translation: Option<Transform<Vec3>>,
+    pub rotation: Option<Transform<Vec4>>,
+    pub scaling: Option<Transform<Vec3>>,
 }
 
 impl ctx::TryFromCtx<'_, Endian> for TextureAnimation {
@@ -79,9 +79,9 @@ impl ctx::TryFromCtx<'_, Endian> for TextureAnimation {
         let inclusive_size = src.gread_with::<u32>(offset, ctx).unwrap();
         let mut texture_animation = TextureAnimation {
             inclusive_size,
-            texture_translation: None,
-            texture_rotation: None,
-            texture_scaling: None,
+            translation: None,
+            rotation: None,
+            scaling: None,
         };
 
         while (*offset as u32) < inclusive_size {
@@ -89,16 +89,16 @@ impl ctx::TryFromCtx<'_, Endian> for TextureAnimation {
 
             match tag {
                 KTAT_TAG => {
-                    let ktat = src.gread_with::<TextureTranslation>(offset, ctx)?;
-                    texture_animation.texture_translation = Some(ktat);
+                    let ktat = src.gread_with(offset, ctx)?;
+                    texture_animation.translation = Some(ktat);
                 }
                 KTAR_TAG => {
-                    let ktar = src.gread_with::<TextureRotation>(offset, ctx)?;
-                    texture_animation.texture_rotation = Some(ktar);
+                    let ktar = src.gread_with(offset, ctx)?;
+                    texture_animation.rotation = Some(ktar);
                 }
                 KTAS_TAG => {
-                    let ktas = src.gread_with::<TextureScaling>(offset, ctx)?;
-                    texture_animation.texture_scaling = Some(ktas);
+                    let ktas = src.gread_with(offset, ctx)?;
+                    texture_animation.scaling = Some(ktas);
                 }
                 _ => unreachable!(),
             }
@@ -116,17 +116,17 @@ impl ctx::TryIntoCtx<Endian> for TextureAnimation {
 
         src.gwrite_with::<u32>(self.inclusive_size, offset, ctx)?;
 
-        if self.texture_translation.is_some() {
+        if self.translation.is_some() {
             src.gwrite_with::<u32>(KTAT_TAG, offset, ctx)?;
-            src.gwrite_with::<TextureTranslation>(self.texture_translation.unwrap(), offset, ctx)?;
+            src.gwrite_with::<Transform<Vec3>>(self.translation.unwrap(), offset, ctx)?;
         }
-        if self.texture_rotation.is_some() {
+        if self.rotation.is_some() {
             src.gwrite_with::<u32>(KTAR_TAG, offset, ctx)?;
-            src.gwrite_with::<TextureRotation>(self.texture_rotation.unwrap(), offset, ctx)?;
+            src.gwrite_with::<Transform<Vec4>>(self.rotation.unwrap(), offset, ctx)?;
         }
-        if self.texture_scaling.is_some() {
+        if self.scaling.is_some() {
             src.gwrite_with::<u32>(KTAS_TAG, offset, ctx)?;
-            src.gwrite_with::<TextureScaling>(self.texture_scaling.unwrap(), offset, ctx)?;
+            src.gwrite_with::<Transform<Vec3>>(self.scaling.unwrap(), offset, ctx)?;
         }
 
         Ok(*offset)
@@ -139,21 +139,21 @@ impl BytesTotalSize for TextureAnimation {
 
         result += size_of_val(&self.inclusive_size);
 
-        if self.texture_translation.is_some() {
+        if self.translation.is_some() {
             result += 4;
             result += self
-                .texture_translation
+                .translation
                 .as_ref()
                 .unwrap()
                 .total_bytes_size();
         }
-        if self.texture_rotation.is_some() {
+        if self.rotation.is_some() {
             result += 4;
-            result += self.texture_rotation.as_ref().unwrap().total_bytes_size();
+            result += self.rotation.as_ref().unwrap().total_bytes_size();
         }
-        if self.texture_scaling.is_some() {
+        if self.scaling.is_some() {
             result += 4;
-            result += self.texture_scaling.as_ref().unwrap().total_bytes_size();
+            result += self.scaling.as_ref().unwrap().total_bytes_size();
         }
 
         result
