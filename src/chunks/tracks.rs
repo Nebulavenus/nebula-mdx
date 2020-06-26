@@ -11,7 +11,8 @@ pub struct Track<T> {
 }
 
 impl<'a, T: 'a> ctx::TryFromCtx<'a, Endian> for Track<T>
-    where T: ctx::TryFromCtx<'a, Endian, Error = scroll::Error>,
+where
+    T: ctx::TryFromCtx<'a, Endian, Error = scroll::Error>,
 {
     type Error = scroll::Error;
 
@@ -34,7 +35,8 @@ impl<'a, T: 'a> ctx::TryFromCtx<'a, Endian> for Track<T>
 }
 
 impl<T> ctx::TryIntoCtx<Endian> for Track<T>
-    where T: ctx::TryIntoCtx<Endian, Error = scroll::Error>,
+where
+    T: ctx::TryIntoCtx<Endian, Error = scroll::Error>,
 {
     type Error = scroll::Error;
 
@@ -159,7 +161,8 @@ pub struct Transform<T> {
 }
 
 impl<'a, T: 'a> ctx::TryFromCtx<'a, Endian> for Transform<T>
-    where T: ctx::TryFromCtx<'a, Endian, Error = scroll::Error>,
+where
+    T: ctx::TryFromCtx<'a, Endian, Error = scroll::Error>,
 {
     type Error = scroll::Error;
 
@@ -197,7 +200,8 @@ impl<'a, T: 'a> ctx::TryFromCtx<'a, Endian> for Transform<T>
 }
 
 impl<T> ctx::TryIntoCtx<Endian> for Transform<T>
-    where T: ctx::TryIntoCtx<Endian, Error = scroll::Error>,
+where
+    T: ctx::TryIntoCtx<Endian, Error = scroll::Error>,
 {
     type Error = scroll::Error;
 
@@ -319,15 +323,6 @@ macro_rules! create_named_tracks {
         }
     };
 }
-
-// KTAT - KTAR - KTAS
-create_named_track!(TextureTranslationTrack, f32, 3);
-create_named_track!(TextureRotationTrack, f32, 4);
-create_named_track!(TextureScalingTrack, f32, 3);
-
-create_named_tracks!(TextureTranslation, TextureTranslationTrack, f32, 3);
-create_named_tracks!(TextureRotation, TextureRotationTrack, f32, 4);
-create_named_tracks!(TextureScaling, TextureScalingTrack, f32, 3);
 
 // KGTR - KGRT - KGSC
 create_named_track!(GeosetTranslationTrack, f32, 3);

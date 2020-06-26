@@ -141,11 +141,7 @@ impl BytesTotalSize for TextureAnimation {
 
         if self.translation.is_some() {
             result += 4;
-            result += self
-                .translation
-                .as_ref()
-                .unwrap()
-                .total_bytes_size();
+            result += self.translation.as_ref().unwrap().total_bytes_size();
         }
         if self.rotation.is_some() {
             result += 4;

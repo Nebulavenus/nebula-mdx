@@ -17,10 +17,7 @@ impl ctx::TryFromCtx<'_, Endian> for Vec2 {
         let x = src.gread_with(offset, ctx)?;
         let y = src.gread_with(offset, ctx)?;
 
-        Ok((
-            Vec2 { x, y },
-            *offset,
-        ))
+        Ok((Vec2 { x, y }, *offset))
     }
 }
 
@@ -63,10 +60,7 @@ impl ctx::TryFromCtx<'_, Endian> for Vec3 {
         let y = src.gread_with(offset, ctx)?;
         let z = src.gread_with(offset, ctx)?;
 
-        Ok((
-            Vec3 { x, y, z },
-            *offset,
-        ))
+        Ok((Vec3 { x, y, z }, *offset))
     }
 }
 
@@ -113,10 +107,7 @@ impl ctx::TryFromCtx<'_, Endian> for Vec4 {
         let z = src.gread_with(offset, ctx)?;
         let w = src.gread_with(offset, ctx)?;
 
-        Ok((
-            Vec4 { x, y, z, w },
-            *offset,
-        ))
+        Ok((Vec4 { x, y, z, w }, *offset))
     }
 }
 

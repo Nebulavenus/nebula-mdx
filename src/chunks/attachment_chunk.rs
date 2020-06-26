@@ -1,5 +1,5 @@
-use crate::chunks::{BytesTotalSize, Node, AttachmentVisibility};
-use crate::consts::{KATV_TAG};
+use crate::chunks::{AttachmentVisibility, BytesTotalSize, Node};
+use crate::consts::KATV_TAG;
 use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
 
@@ -27,7 +27,10 @@ impl ctx::TryFromCtx<'_, Endian> for AttachmentChunk {
         while total_size < chunk_size {
             let attachment = src.gread_with::<Attachment>(offset, ctx)?;
             total_size += attachment.inclusive_size;
-            assert_eq!(attachment.inclusive_size, attachment.total_bytes_size() as u32);
+            assert_eq!(
+                attachment.inclusive_size,
+                attachment.total_bytes_size() as u32
+            );
             data.push(attachment);
         }
 
@@ -45,7 +48,7 @@ impl ctx::TryIntoCtx<Endian> for AttachmentChunk {
 
         for geoset in self.data {
             src.gwrite_with::<Attachment>(geoset, offset, ctx)?;
-        };
+        }
 
         Ok(*offset)
     }

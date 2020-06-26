@@ -1,5 +1,5 @@
-use crate::chunks::{BytesTotalSize, CameraTranslation, CameraRotation, CameraTargetTranslation};
-use crate::consts::{KCTR_TAG, KCRL_TAG, KTTR_TAG};
+use crate::chunks::{BytesTotalSize, CameraRotation, CameraTargetTranslation, CameraTranslation};
+use crate::consts::{KCRL_TAG, KCTR_TAG, KTTR_TAG};
 use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
 
@@ -45,7 +45,7 @@ impl ctx::TryIntoCtx<Endian> for CameraChunk {
 
         for camera in self.data {
             src.gwrite_with::<Camera>(camera, offset, ctx)?;
-        };
+        }
 
         Ok(*offset)
     }
@@ -107,7 +107,7 @@ impl ctx::TryFromCtx<'_, Endian> for Camera {
         for id in 0..target_position.len() {
             target_position[id] = src.gread_with::<f32>(offset, ctx)?;
         }
-        
+
         let mut camera = Camera {
             inclusive_size,
             name,
@@ -128,15 +128,16 @@ impl ctx::TryFromCtx<'_, Endian> for Camera {
                 KCTR_TAG => {
                     let translation = src.gread_with::<CameraTranslation>(offset, ctx)?;
                     camera.translation = Some(translation);
-                },
+                }
                 KCRL_TAG => {
                     let rotation = src.gread_with::<CameraRotation>(offset, ctx)?;
                     camera.rotation = Some(rotation);
-                },
+                }
                 KTTR_TAG => {
-                    let target_translation = src.gread_with::<CameraTargetTranslation>(offset, ctx)?;
+                    let target_translation =
+                        src.gread_with::<CameraTargetTranslation>(offset, ctx)?;
                     camera.target_translation = Some(target_translation);
-                },
+                }
                 _ => unreachable!(),
             }
         }
@@ -186,7 +187,11 @@ impl ctx::TryIntoCtx<Endian> for Camera {
 
         if self.target_translation.is_some() {
             src.gwrite_with::<u32>(KCRL_TAG, offset, ctx)?;
-            src.gwrite_with::<CameraTargetTranslation>(self.target_translation.unwrap(), offset, ctx)?;
+            src.gwrite_with::<CameraTargetTranslation>(
+                self.target_translation.unwrap(),
+                offset,
+                ctx,
+            )?;
         }
 
         Ok(*offset)
