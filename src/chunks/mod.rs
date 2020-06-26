@@ -6,7 +6,7 @@ pub use attachment_chunk::AttachmentChunk;
 pub use bone_chunk::{Bone, BoneChunk};
 pub use camera_chunk::CameraChunk;
 pub use collision_shape_chunk::CollisionShapeChunk;
-pub use data_types::{Vec2, Vec3, Vec4};
+pub use data_types::{Color, Vec2, Vec3, Vec4};
 pub use event_object_chunk::EventObjectChunk;
 pub use extent::Extent;
 pub use geoset_animation_chunk::{GeosetAnimation, GeosetAnimationChunk};

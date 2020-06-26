@@ -333,13 +333,6 @@ create_named_tracks!(GeosetTranslation, GeosetTranslationTrack, f32, 3);
 create_named_tracks!(GeosetRotation, GeosetRotationTrack, f32, 4);
 create_named_tracks!(GeosetScaling, GeosetScalingTrack, f32, 3);
 
-// KGAO - KGAC
-create_named_track!(GeosetAlphaTrack, f32, 1);
-create_named_track!(GeosetColorTrack, f32, 3);
-
-create_named_tracks!(GeosetAlpha, GeosetAlphaTrack, f32, 1);
-create_named_tracks!(GeosetColor, GeosetColorTrack, f32, 3);
-
 // KATV
 create_named_track!(AttachmentVisibilityTrack, f32, 1);
 

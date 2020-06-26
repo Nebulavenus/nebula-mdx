@@ -1,4 +1,4 @@
-use crate::chunks::{BytesTotalSize, GeosetAlpha, GeosetColor};
+use crate::chunks::{BytesTotalSize, Color, Transform};
 use crate::consts::{KGAC_TAG, KGAO_TAG};
 use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
@@ -70,8 +70,8 @@ pub struct GeosetAnimation {
     pub color: [f32; 3], // bgr
     pub geoset_id: u32,
 
-    pub geoset_alpha: Option<GeosetAlpha>,
-    pub geoset_color: Option<GeosetColor>,
+    pub geoset_alpha: Option<Transform<f32>>,
+    pub geoset_color: Option<Transform<Color>>,
 }
 
 impl ctx::TryFromCtx<'_, Endian> for GeosetAnimation {
@@ -105,11 +105,11 @@ impl ctx::TryFromCtx<'_, Endian> for GeosetAnimation {
 
             match tag {
                 KGAO_TAG => {
-                    let geoset_alpha = src.gread_with::<GeosetAlpha>(offset, ctx)?;
+                    let geoset_alpha = src.gread_with::<Transform<f32>>(offset, ctx)?;
                     geoset_animation.geoset_alpha = Some(geoset_alpha);
                 }
                 KGAC_TAG => {
-                    let geoset_color = src.gread_with::<GeosetColor>(offset, ctx)?;
+                    let geoset_color = src.gread_with::<Transform<Color>>(offset, ctx)?;
                     geoset_animation.geoset_color = Some(geoset_color);
                 }
                 _ => unreachable!(),
@@ -136,11 +136,11 @@ impl ctx::TryIntoCtx<Endian> for GeosetAnimation {
 
         if self.geoset_alpha.is_some() {
             src.gwrite_with::<u32>(KGAO_TAG, offset, ctx)?;
-            src.gwrite_with::<GeosetAlpha>(self.geoset_alpha.unwrap(), offset, ctx)?;
+            src.gwrite_with::<Transform<f32>>(self.geoset_alpha.unwrap(), offset, ctx)?;
         }
         if self.geoset_color.is_some() {
             src.gwrite_with::<u32>(KGAC_TAG, offset, ctx)?;
-            src.gwrite_with::<GeosetColor>(self.geoset_color.unwrap(), offset, ctx)?;
+            src.gwrite_with::<Transform<Color>>(self.geoset_color.unwrap(), offset, ctx)?;
         }
 
         Ok(*offset)

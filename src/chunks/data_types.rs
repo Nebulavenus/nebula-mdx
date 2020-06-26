@@ -136,3 +136,48 @@ impl BytesTotalSize for Vec4 {
         result
     }
 }
+
+#[derive(PartialEq, Debug)]
+pub struct Color {
+    b: f32,
+    g: f32,
+    r: f32,
+}
+
+impl ctx::TryFromCtx<'_, Endian> for Color {
+    type Error = scroll::Error;
+
+    fn try_from_ctx(src: &'_ [u8], ctx: Endian) -> Result<(Self, usize), Self::Error> {
+        let offset = &mut 0;
+
+        let b = src.gread_with(offset, ctx)?;
+        let g = src.gread_with(offset, ctx)?;
+        let r = src.gread_with(offset, ctx)?;
+
+        Ok((Color { b, g, r }, *offset))
+    }
+}
+
+impl ctx::TryIntoCtx<Endian> for Color {
+    type Error = scroll::Error;
+
+    fn try_into_ctx(self, src: &mut [u8], ctx: Endian) -> Result<usize, Self::Error> {
+        let offset = &mut 0;
+
+        src.gwrite_with::<f32>(self.b, offset, ctx)?;
+        src.gwrite_with::<f32>(self.g, offset, ctx)?;
+        src.gwrite_with::<f32>(self.r, offset, ctx)?;
+
+        Ok(*offset)
+    }
+}
+
+impl BytesTotalSize for Color {
+    fn total_bytes_size(&self) -> usize {
+        let mut result = 0usize;
+        result += size_of_val(&self.b);
+        result += size_of_val(&self.g);
+        result += size_of_val(&self.r);
+        result
+    }
+}
