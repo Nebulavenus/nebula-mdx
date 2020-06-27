@@ -6,9 +6,8 @@ pub use attachment_chunk::AttachmentChunk;
 pub use bone_chunk::{Bone, BoneChunk};
 pub use camera_chunk::CameraChunk;
 pub use collision_shape_chunk::CollisionShapeChunk;
-pub use data_types::{Color, Vec2, Vec3, Vec4};
+pub use data_types::{Color, Vec2, Vec3, Vec4, Extent};
 pub use event_object_chunk::EventObjectChunk;
-pub use extent::Extent;
 pub use geoset_animation_chunk::{GeosetAnimation, GeosetAnimationChunk};
 pub use geoset_chunk::{
     Face, FaceGroup, FaceTypeGroup, Geoset, GeosetChunk, MatrixGroup, MatrixIndex,
@@ -47,7 +46,6 @@ mod camera_chunk;
 mod collision_shape_chunk;
 mod data_types;
 mod event_object_chunk;
-mod extent;
 mod geoset_animation_chunk;
 mod geoset_chunk;
 mod global_sequence_chunk;

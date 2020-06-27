@@ -20,7 +20,7 @@ where
         let offset = &mut 0;
 
         let time = src.gread_with::<u32>(offset, ctx)?;
-        let value = src.gread_with(offset, ctx)?;
+        let value = src.gread_with::<T>(offset, ctx)?;
 
         Ok((
             Track {

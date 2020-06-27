@@ -4,8 +4,8 @@ use std::mem::size_of_val;
 
 #[derive(PartialEq, Debug)]
 pub struct Vec2 {
-    x: f32,
-    y: f32,
+    pub x: f32,
+    pub y: f32,
 }
 
 impl ctx::TryFromCtx<'_, Endian> for Vec2 {
@@ -45,9 +45,9 @@ impl BytesTotalSize for Vec2 {
 
 #[derive(PartialEq, Debug)]
 pub struct Vec3 {
-    x: f32,
-    y: f32,
-    z: f32,
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
 }
 
 impl ctx::TryFromCtx<'_, Endian> for Vec3 {
@@ -90,10 +90,10 @@ impl BytesTotalSize for Vec3 {
 
 #[derive(PartialEq, Debug)]
 pub struct Vec4 {
-    x: f32,
-    y: f32,
-    z: f32,
-    w: f32,
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+    pub w: f32,
 }
 
 impl ctx::TryFromCtx<'_, Endian> for Vec4 {
@@ -139,9 +139,9 @@ impl BytesTotalSize for Vec4 {
 
 #[derive(PartialEq, Debug)]
 pub struct Color {
-    b: f32,
-    g: f32,
-    r: f32,
+    pub b: f32,
+    pub g: f32,
+    pub r: f32,
 }
 
 impl ctx::TryFromCtx<'_, Endian> for Color {
@@ -178,6 +178,60 @@ impl BytesTotalSize for Color {
         result += size_of_val(&self.b);
         result += size_of_val(&self.g);
         result += size_of_val(&self.r);
+        result
+    }
+}
+
+#[derive(PartialEq, Debug)]
+pub struct Extent {
+    pub bounds_radius: f32,
+    pub minimum: Vec3,
+    pub maximum: Vec3,
+}
+
+impl ctx::TryFromCtx<'_, Endian> for Extent {
+    type Error = scroll::Error;
+
+    fn try_from_ctx(src: &[u8], ctx: Endian) -> Result<(Self, usize), Self::Error> {
+        let offset = &mut 0;
+
+        let bounds_radius = src.gread_with::<f32>(offset, ctx)?;
+        let minimum = src.gread_with::<Vec3>(offset, ctx)?;
+        let maximum = src.gread_with::<Vec3>(offset, ctx)?;
+
+        Ok((
+            Extent {
+                bounds_radius,
+                minimum,
+                maximum,
+            },
+            *offset,
+        ))
+    }
+}
+
+impl ctx::TryIntoCtx<Endian> for Extent {
+    type Error = scroll::Error;
+
+    fn try_into_ctx(self, src: &mut [u8], ctx: Endian) -> Result<usize, Self::Error> {
+        let offset = &mut 0;
+
+        src.gwrite_with::<f32>(self.bounds_radius, offset, ctx)?;
+        src.gwrite_with::<Vec3>(self.minimum, offset, ctx)?;
+        src.gwrite_with::<Vec3>(self.maximum, offset, ctx)?;
+
+        Ok(*offset)
+    }
+}
+
+impl BytesTotalSize for Extent {
+    fn total_bytes_size(&self) -> usize {
+        let mut result = 0usize;
+
+        result += size_of_val(&self.bounds_radius);
+        result += self.minimum.total_bytes_size();
+        result += self.maximum.total_bytes_size();
+
         result
     }
 }
