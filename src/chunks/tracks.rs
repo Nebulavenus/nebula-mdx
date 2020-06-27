@@ -324,11 +324,6 @@ macro_rules! create_named_tracks {
     };
 }
 
-// KATV
-create_named_track!(AttachmentVisibilityTrack, f32, 1);
-
-create_named_tracks!(AttachmentVisibility, AttachmentVisibilityTrack, f32, 1);
-
 // KCTR - KCRL - KTTR
 create_named_track!(CameraTranslationTrack, f32, 3);
 create_named_track!(CameraRotationTrack, u32, 1);

@@ -1,4 +1,4 @@
-use crate::chunks::{AttachmentVisibility, BytesTotalSize, Node};
+use crate::chunks::{BytesTotalSize, Node, Transform};
 use crate::consts::KATV_TAG;
 use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
@@ -77,7 +77,7 @@ pub struct Attachment {
     pub path: String,
     pub attachment_id: u32,
 
-    pub visibility: Option<AttachmentVisibility>,
+    pub visibility: Option<Transform<f32>>,
 }
 
 impl ctx::TryFromCtx<'_, Endian> for Attachment {
@@ -109,7 +109,7 @@ impl ctx::TryFromCtx<'_, Endian> for Attachment {
 
             match tag {
                 KATV_TAG => {
-                    let visibility = src.gread_with::<AttachmentVisibility>(offset, ctx)?;
+                    let visibility = src.gread_with::<Transform<f32>>(offset, ctx)?;
                     attachment.visibility = Some(visibility);
                 }
                 _ => unreachable!(),
@@ -142,7 +142,7 @@ impl ctx::TryIntoCtx<Endian> for Attachment {
 
         if self.visibility.is_some() {
             src.gwrite_with::<u32>(KATV_TAG, offset, ctx)?;
-            src.gwrite_with::<AttachmentVisibility>(self.visibility.unwrap(), offset, ctx)?;
+            src.gwrite_with::<Transform<f32>>(self.visibility.unwrap(), offset, ctx)?;
         }
 
         Ok(*offset)
