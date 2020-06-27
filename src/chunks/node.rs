@@ -1,4 +1,4 @@
-use crate::chunks::{BytesTotalSize, GeosetRotation, GeosetScaling, GeosetTranslation};
+use crate::chunks::{BytesTotalSize, Transform, Vec3, Vec4};
 use crate::consts::{KGRT_TAG, KGSC_TAG, KGTR_TAG};
 use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
@@ -13,9 +13,9 @@ pub struct Node {
     pub parent_id: u32,
     pub flags: u32,
 
-    pub geoset_translation: Option<GeosetTranslation>,
-    pub geoset_rotation: Option<GeosetRotation>,
-    pub geoset_scaling: Option<GeosetScaling>,
+    pub translation: Option<Transform<Vec3>>,
+    pub rotation: Option<Transform<Vec4>>,
+    pub scaling: Option<Transform<Vec3>>,
 }
 
 impl ctx::TryFromCtx<'_, Endian> for Node {
@@ -41,9 +41,9 @@ impl ctx::TryFromCtx<'_, Endian> for Node {
             object_id,
             parent_id,
             flags,
-            geoset_translation: None,
-            geoset_rotation: None,
-            geoset_scaling: None,
+            translation: None,
+            rotation: None,
+            scaling: None,
         };
 
         while (*offset as u32) < inclusive_size {
@@ -51,16 +51,16 @@ impl ctx::TryFromCtx<'_, Endian> for Node {
 
             match tag {
                 KGTR_TAG => {
-                    let geoset_translation = src.gread_with::<GeosetTranslation>(offset, ctx)?;
-                    node.geoset_translation = Some(geoset_translation);
+                    let translation = src.gread_with::<Transform<Vec3>>(offset, ctx)?;
+                    node.translation = Some(translation);
                 }
                 KGRT_TAG => {
-                    let geoset_rotation = src.gread_with::<GeosetRotation>(offset, ctx)?;
-                    node.geoset_rotation = Some(geoset_rotation);
+                    let rotation = src.gread_with::<Transform<Vec4>>(offset, ctx)?;
+                    node.rotation = Some(rotation);
                 }
                 KGSC_TAG => {
-                    let geoset_scaling = src.gread_with::<GeosetScaling>(offset, ctx)?;
-                    node.geoset_scaling = Some(geoset_scaling);
+                    let scaling = src.gread_with::<Transform<Vec3>>(offset, ctx)?;
+                    node.scaling = Some(scaling);
                 }
                 _ => unreachable!(),
             }
@@ -91,17 +91,17 @@ impl ctx::TryIntoCtx<Endian> for Node {
         src.gwrite_with::<u32>(self.parent_id, offset, ctx)?;
         src.gwrite_with::<u32>(self.flags, offset, ctx)?;
 
-        if self.geoset_translation.is_some() {
+        if self.translation.is_some() {
             src.gwrite_with::<u32>(KGTR_TAG, offset, ctx)?;
-            src.gwrite_with::<GeosetTranslation>(self.geoset_translation.unwrap(), offset, ctx)?;
+            src.gwrite_with::<Transform<Vec3>>(self.translation.unwrap(), offset, ctx)?;
         }
-        if self.geoset_rotation.is_some() {
+        if self.rotation.is_some() {
             src.gwrite_with::<u32>(KGRT_TAG, offset, ctx)?;
-            src.gwrite_with::<GeosetRotation>(self.geoset_rotation.unwrap(), offset, ctx)?;
+            src.gwrite_with::<Transform<Vec4>>(self.rotation.unwrap(), offset, ctx)?;
         }
-        if self.geoset_scaling.is_some() {
+        if self.scaling.is_some() {
             src.gwrite_with::<u32>(KGSC_TAG, offset, ctx)?;
-            src.gwrite_with::<GeosetScaling>(self.geoset_scaling.unwrap(), offset, ctx)?;
+            src.gwrite_with::<Transform<Vec3>>(self.scaling.unwrap(), offset, ctx)?;
         }
 
         Ok(*offset)
@@ -121,17 +121,17 @@ impl BytesTotalSize for Node {
         result += size_of_val(&self.parent_id);
         result += size_of_val(&self.flags);
 
-        if self.geoset_translation.is_some() {
+        if self.translation.is_some() {
             result += 4;
-            result += self.geoset_translation.as_ref().unwrap().total_bytes_size();
+            result += self.translation.as_ref().unwrap().total_bytes_size();
         }
-        if self.geoset_rotation.is_some() {
+        if self.rotation.is_some() {
             result += 4;
-            result += self.geoset_rotation.as_ref().unwrap().total_bytes_size();
+            result += self.rotation.as_ref().unwrap().total_bytes_size();
         }
-        if self.geoset_scaling.is_some() {
+        if self.scaling.is_some() {
             result += 4;
-            result += self.geoset_scaling.as_ref().unwrap().total_bytes_size();
+            result += self.scaling.as_ref().unwrap().total_bytes_size();
         }
 
         result

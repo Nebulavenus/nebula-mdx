@@ -324,15 +324,6 @@ macro_rules! create_named_tracks {
     };
 }
 
-// KGTR - KGRT - KGSC
-create_named_track!(GeosetTranslationTrack, f32, 3);
-create_named_track!(GeosetRotationTrack, f32, 4);
-create_named_track!(GeosetScalingTrack, f32, 3);
-
-create_named_tracks!(GeosetTranslation, GeosetTranslationTrack, f32, 3);
-create_named_tracks!(GeosetRotation, GeosetRotationTrack, f32, 4);
-create_named_tracks!(GeosetScaling, GeosetScalingTrack, f32, 3);
-
 // KATV
 create_named_track!(AttachmentVisibilityTrack, f32, 1);
 
