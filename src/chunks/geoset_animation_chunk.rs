@@ -101,7 +101,7 @@ impl ctx::TryFromCtx<'_, Endian> for GeosetAnimation {
         };
 
         while (*offset as u32) < inclusive_size {
-            let tag = src.gread_with::<u32>(offset, ctx).unwrap();
+            let tag = src.gread_with::<u32>(offset, ctx)?;
 
             match tag {
                 KGAO_TAG => {
