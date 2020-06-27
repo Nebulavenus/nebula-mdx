@@ -1,4 +1,4 @@
-use crate::chunks::{BytesTotalSize, CameraRotation, CameraTargetTranslation, CameraTranslation};
+use crate::chunks::{BytesTotalSize, Transform, Vec3};
 use crate::consts::{KCRL_TAG, KCTR_TAG, KTTR_TAG};
 use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
@@ -77,9 +77,9 @@ pub struct Camera {
     pub near_clipping_plane: f32,
     pub target_position: [f32; 3],
 
-    pub translation: Option<CameraTranslation>,
-    pub rotation: Option<CameraRotation>,
-    pub target_translation: Option<CameraTargetTranslation>,
+    pub translation: Option<Transform<Vec3>>,
+    pub rotation: Option<Transform<u32>>,
+    pub target_translation: Option<Transform<Vec3>>,
 }
 
 impl ctx::TryFromCtx<'_, Endian> for Camera {
@@ -126,16 +126,15 @@ impl ctx::TryFromCtx<'_, Endian> for Camera {
 
             match tag {
                 KCTR_TAG => {
-                    let translation = src.gread_with::<CameraTranslation>(offset, ctx)?;
+                    let translation = src.gread_with::<Transform<Vec3>>(offset, ctx)?;
                     camera.translation = Some(translation);
                 }
                 KCRL_TAG => {
-                    let rotation = src.gread_with::<CameraRotation>(offset, ctx)?;
+                    let rotation = src.gread_with::<Transform<u32>>(offset, ctx)?;
                     camera.rotation = Some(rotation);
                 }
                 KTTR_TAG => {
-                    let target_translation =
-                        src.gread_with::<CameraTargetTranslation>(offset, ctx)?;
+                    let target_translation = src.gread_with::<Transform<Vec3>>(offset, ctx)?;
                     camera.target_translation = Some(target_translation);
                 }
                 _ => unreachable!(),
@@ -177,21 +176,17 @@ impl ctx::TryIntoCtx<Endian> for Camera {
 
         if self.translation.is_some() {
             src.gwrite_with::<u32>(KCTR_TAG, offset, ctx)?;
-            src.gwrite_with::<CameraTranslation>(self.translation.unwrap(), offset, ctx)?;
+            src.gwrite_with::<Transform<Vec3>>(self.translation.unwrap(), offset, ctx)?;
         }
 
         if self.rotation.is_some() {
             src.gwrite_with::<u32>(KCRL_TAG, offset, ctx)?;
-            src.gwrite_with::<CameraRotation>(self.rotation.unwrap(), offset, ctx)?;
+            src.gwrite_with::<Transform<u32>>(self.rotation.unwrap(), offset, ctx)?;
         }
 
         if self.target_translation.is_some() {
             src.gwrite_with::<u32>(KCRL_TAG, offset, ctx)?;
-            src.gwrite_with::<CameraTargetTranslation>(
-                self.target_translation.unwrap(),
-                offset,
-                ctx,
-            )?;
+            src.gwrite_with::<Transform<Vec3>>(self.target_translation.unwrap(), offset, ctx)?;
         }
 
         Ok(*offset)
