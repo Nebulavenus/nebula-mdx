@@ -1,12 +1,12 @@
 [package]
 name = "nebula-mdx"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Nebula Venus <nebulavenus@tuta.io>"]
 edition = "2018"
 
 [dependencies]
 scroll = "0.10"
-log = "0.4.8"
+log = "0.4.11"
 
 [dev-dependencies]
 env_logger = "0.7.1"
