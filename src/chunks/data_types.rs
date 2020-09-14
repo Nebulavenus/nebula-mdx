@@ -2,7 +2,7 @@ use crate::chunks::BytesTotalSize;
 use scroll::{ctx, Endian, Pread, Pwrite};
 use std::mem::size_of_val;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Vec2 {
     pub x: f32,
     pub y: f32,
@@ -43,7 +43,7 @@ impl BytesTotalSize for Vec2 {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Vec3 {
     pub x: f32,
     pub y: f32,
@@ -88,7 +88,7 @@ impl BytesTotalSize for Vec3 {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Vec4 {
     pub x: f32,
     pub y: f32,
@@ -137,7 +137,7 @@ impl BytesTotalSize for Vec4 {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Color {
     pub b: f32,
     pub g: f32,
@@ -182,7 +182,7 @@ impl BytesTotalSize for Color {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Extent {
     pub bounds_radius: f32,
     pub minimum: Vec3,
